@@ -1,0 +1,154 @@
+# envelope
+
+Package envelope provides Envelope signature scheme.
+
+To prevent caninicalization complexity, the envelope encryption bundles the
+payload with the signature so that the Verifier should have to use the payload
+as protected content.
+
+## Constants
+
+```golang
+const (
+    // SigningVersion point to the version used for signing purpose.
+    SigningVersion = protectedv2.Version
+    // LowestSupportedVersion defines the minimal version used for envelope
+    // verification.
+    LowestSupportedVersion = SigningVersion - 1
+)
+```
+
+## Variables
+
+ErrInvalidEnvelope is raised when there is an issue with the envelope.
+
+```golang
+var ErrInvalidEnvelope = errors.New("invalid envelope")
+```
+
+## Functions
+
+### func [VerifyAndUnwrap](static.go#L75)
+
+`func VerifyAndUnwrap(e *Envelope, verifier signature.Verifier) ([]byte, error)`
+
+VerifyAndUnwrap verifies the envelope signature and return the verified content.
+
+```golang
+// Generate deterministic key pair for demonstration purpose
+pub, _, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+if err != nil {
+    panic(err)
+}
+
+// Create a verifier instance from the given crypto material
+verifier, err := signature.FromPublicKey(pub)
+if err != nil {
+    panic(err)
+}
+
+// Received envelope
+envelopeRaw := `{"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"sxmBbwylYhmtvtAyIuvPmjNncvJCxBmZeNBD4bnS17avg2nAueHg1hStwrjzErqU5Mr4qpWGKGKH8+dUbhyQBQ=="}}`
+
+// Try to deocde the envelope
+var envelope Envelope
+if err := json.NewDecoder(bytes.NewReader([]byte(envelopeRaw))).Decode(&envelope); err != nil {
+    panic(err)
+}
+
+// Verify and unwrap the envelope
+payload, err := VerifyAndUnwrap(&envelope, verifier)
+if err != nil {
+    panic(err)
+}
+```
+
+ Output:
+
+```
+00000000  0a 28 62 30 61 34 63 66  63 39 66 64 32 31 32 35  |.(b0a4cfc9fd2125|
+00000010  32 65 61 66 35 65 32 30  39 33 62 37 30 38 38 64  |2eaf5e2093b7088d|
+00000020  35 32 32 38 65 62 32 62  34 37 12 04 6d 61 69 6e  |5228eb2b47..main|
+00000030  1a 14 32 30 32 32 2d 31  32 2d 31 32 54 31 33 3a  |..2022-12-12T13:|
+00000040  35 37 3a 33 32 5a 22 04  31 2e 32 30 2a 06 76 31  |57:32Z".1.20*.v1|
+00000050  2e 30 2e 32                                       |.0.2|
+```
+
+## Types
+
+### type [Envelope](types.go#L25)
+
+`type Envelope struct { ... }`
+
+Envelope describes the final assembled message
+
+#### func [WrapAndSign](static.go#L18)
+
+`func WrapAndSign(contentType string, payload []byte, signer signature.Signer, opts ...Option) (*Envelope, error)`
+
+WrapAndSign wraps the input payload in a given envelope and sign the content.
+
+```golang
+// Generate deterministic key pair for demonstration purpose
+_, pk, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+if err != nil {
+    panic(err)
+}
+
+// Create a signer instance from the given crypto material
+signer, err := signature.FromPrivateKey(pk)
+if err != nil {
+    panic(err)
+}
+
+// Create a PB Message (this object is used as a sample PB struct)
+m := &AppInfo{
+    GitCommit: "b0a4cfc9fd21252eaf5e2093b7088d5228eb2b47",
+    GitBranch: "main",
+    BuildDate: "2022-12-12T13:57:32Z",
+    GoVersion: "1.20",
+    Version:   "v1.0.2",
+}
+
+// Serialize as bytes
+payload, err := cbor.Marshal(m)
+if err != nil {
+    panic(err)
+}
+
+// Wrap and sign the given content
+envelope, err := WrapAndSign(
+    "types.datadoghq.com/v1/AppInfo", // The content type must be identifiable
+    payload,                          // Body to be signed
+    signer,                           // Signer instance to use to generate the signature
+    WithTimestamp(1670850610),        // Fixed timestamp for determinism
+)
+if err != nil {
+    panic(err)
+}
+```
+
+ Output:
+
+```
+{"content_type":"types.datadoghq.com/v1/AppInfo","content":"hXgoYjBhNGNmYzlmZDIxMjUyZWFmNWUyMDkzYjcwODhkNTIyOGViMmI0N2RtYWludDIwMjItMTItMTJUMTM6NTc6MzJaZDEuMjBmdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"lQ+1B6mbw3UfIlCEGzfTCepGtlyjhtXe2hejZbyz8yPgiNK3+s51AJHRdIlHitcjuHzyevzTD8kU+NXdLSn7BQ=="}}
+```
+
+### type [Option](options.go#L7)
+
+`type Option func(*options)`
+
+Option describes the enveleope wrapping option function.
+
+#### func [WithTimestamp](options.go#L14)
+
+`func WithTimestamp(r uint64) Option`
+
+WithTimestamp sets the signature timestamp.
+
+### type [Signature](types.go#L32)
+
+`type Signature struct { ... }`
+
+Signature holds all signature elements.
+

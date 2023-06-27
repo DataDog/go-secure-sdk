@@ -1,0 +1,94 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "$ref": "#/definitions/Vector",
+    "definitions": {
+        "Vector": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "$schema": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Test"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "tests"
+            ],
+            "title": "Envelope vector tests"
+        },
+        "Test": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "public-key-pem": {
+                    "type": ["string", "null"]
+                },
+                "public-key-id": {
+                    "type": ["string", "null"]
+                },
+                "private-key-pem": {
+                    "type": ["string", "null"]
+                },
+                "content-type": {
+                    "type": ["string", "null"]
+                },
+                "content": {
+                    "type": ["string", "null"]
+                },
+                "timestamp": {
+                    "type": ["integer", "null"]
+                },
+                "nonce": {
+                    "type": ["string", "null"],
+                    "deprecated": true,
+                    "description": "Used for canonicalization v1 only"
+                },
+                "protected":  {
+                    "type": ["string", "null"]
+                },
+                "signature": {
+                    "type": ["string", "null"]
+                },
+                "algorithm": {
+                    "type": ["string", "null"]
+                },
+                "expect-fail": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "unwrap-only": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "algorithm",
+                "content",
+                "content-type",
+                "description",
+                "expect-fail",
+                "name",
+                "private-key-pem",
+                "public-key-pem",
+                "public-key-id",
+                "protected"
+            ],
+            "title": "Test"
+        }
+    }
+}

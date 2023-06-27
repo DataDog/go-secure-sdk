@@ -1,0 +1,146 @@
+{
+    "$schema": "vector.schema.json",
+    "name": "Datadog encryption scheme Version 2",
+    "tests": [
+        {
+            "@type": "encrypt",
+            "name": "1-E-1",
+            "description": "Encryption nominal case",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "nonce": "8e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a66356359085d4612ed1f4c", 
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "expect-fail": false
+        },
+        {
+            "@type": "encrypt",
+            "name": "1-E-2",
+            "description": "Encryption nominal case without additional data",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "nonce": "8e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a66356359085d4612ed1f4c", 
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a3788594272d90da3f8cf41040282ac1fd576e1803046021cfa9ab3050183474e6634",
+            "expect-fail": false
+        },
+        {
+            "@type": "encrypt",
+            "name": "1-E-3",
+            "description": "Empty payload",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "nonce": "8e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a66356359085d4612ed1f4c", 
+            "plaintext": "",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a663563727c6def23dd3c400234880be4747cd5fc5c84bb623eda98183fd92f877775da",
+            "expect-fail": false
+        },
+        {
+            "@type": "encrypt",
+            "name": "1-F-1",
+            "description": "Key too short",
+            "key": "9819",
+            "nonce": "8e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a66356359085d4612ed1f4c", 
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "encrypt",
+            "name": "1-F-2",
+            "description": "Nonce too short",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "nonce": "8e", 
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-D-1",
+            "description": "Decryption nominal case",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "expect-fail": false
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-D-2",
+            "description": "Decryption nominal case without additional data",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a3788594272d90da3f8cf41040282ac1fd576e1803046021cfa9ab3050183474e6634",
+            "plaintext": "7b227374617465223a2267496e686e5a767046644b4a327067376777506556754b465a4a4d4e554e4e6f227d",
+            "expect-fail": false
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-D-3",
+            "description": "Empty plaintext",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a663563727c6def23dd3c400234880be4747cd5fc5c84bb623eda98183fd92f877775da",
+            "plaintext": "",
+            "expect-fail": false
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-1",
+            "description": "Invalid magic version",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "ff8e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-2",
+            "description": "Tampered nonce",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d2ffff24a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-3",
+            "description": "Tampered ciphertext",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdeffffff8003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-4",
+            "description": "Tampered tag",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa2ffffff",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-5",
+            "description": "Invalid key",
+            "key": "35b6c46df49877b1b0b10b3593d63362a8d5c27afc2fa6fbc896984bfb73f046",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7b22756964223a2238663431623731322d363633662d343861382d623433632d353463663937613934643161227d",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-6",
+            "description": "Additional data mismatch",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "7B22756964223A2235366133393361612D326333342D346262632D613937332D643438323937383166323637227D",
+            "expect-fail": true
+        },
+        {
+            "@type": "decrypt",
+            "name": "2-F-6",
+            "description": "Empty additional data",
+            "key": "981939909cf3a90acae41996b80b688eaafd94519b72c2b909ff6582f6ba4cdc",
+            "ciphertext": "d28e8024a8db59fa9af4a3addc92cbc039f1e4ba3c7a6635634a9e140fe11e1cbfbb870ba778cac283fe6fdea362028003ddbea27ce7639d3a5695d920c62df0dfce8a37881a8d8f9c4295e7993c244526bff9f04bc9867db684bd22e0961c168fa22fa6b2",
+            "additionalData": "",
+            "expect-fail": true
+        }
+    ]
+}

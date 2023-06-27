@@ -1,0 +1,70 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "$ref": "#/definitions/Vector",
+    "definitions": {
+        "Vector": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "$schema": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Test"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "tests"
+            ],
+            "title": "Vector tests"
+        },
+        "Test": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "enum": ["encrypt", "decrypt"]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type":"string"
+                },
+                "nonce": {
+                    "type": "string"
+                },
+                "plaintext": {
+                    "type": "string"
+                },
+                "additionalData": {
+                    "type": "string"
+                },
+                "ciphertext": {
+                    "type": "string"
+                },
+                "expect-fail": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "@type",
+                "description",
+                "name"
+            ],
+            "title": "Test"
+        }
+    }
+}

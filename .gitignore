@@ -1,0 +1,38 @@
+go-test.json
+
+# Temporary files
+*~
+*#
+.#*
+coverage.txt
+
+go-build.log
+go-install.log
+go-test.json
+
+# Vendors
+vendor/
+
+# Binaries for programs and plugins
+dist/
+gin-bin
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Nix build output
+result
+tmp
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# IDE settings
+.idea
+.vscode/
+.history/
