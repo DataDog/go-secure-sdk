@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/awnumar/memguard v0.22.3
-	github.com/fxamacker/cbor/v2 v2.4.0
+	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/gofuzz v1.2.0
