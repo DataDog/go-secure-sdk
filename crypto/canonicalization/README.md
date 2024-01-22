@@ -15,7 +15,7 @@ var (
 
 ## Functions
 
-### func [PreAuthenticationEncoding](pae.go#L49)
+### func [PreAuthenticationEncoding](pae.go#L46)
 
 `func PreAuthenticationEncoding(pieces ...[]byte) ([]byte, error)`
 

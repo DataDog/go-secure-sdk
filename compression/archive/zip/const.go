@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import "errors"
@@ -21,4 +18,6 @@ var (
 	defaultMaxFileSize = uint64(250 * 1024 * 1024)
 	// Maximum entry count
 	defaultMaxEntryCount = uint64(10000)
+	// Maximum size explosion magnitude order
+	defaultMaxExplosionMagnitudeOrder = uint64(3)
 )

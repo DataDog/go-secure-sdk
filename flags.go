@@ -1,12 +1,8 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package security
 
 import (
+	"log/slog"
 	"sync/atomic"
-
-	"github.com/DataDog/go-secure-sdk/log"
 )
 
 type atomicBool int32
@@ -35,11 +31,11 @@ func SetDevMode() (revert func()) {
 	}
 
 	devMode.setTrue()
-	log.Level(log.DebugLevel).Message("Secure SDK: Development mode enabled")
+	slog.Debug("Secure SDK: Development mode enabled")
 
 	return func() {
 		devMode.setFalse()
-		log.Level(log.DebugLevel).Message("Secure SDK: Development mode disabled")
+		slog.Debug("Secure SDK: Development mode disabled")
 	}
 }
 
@@ -63,10 +59,10 @@ func SetFIPSMode() (revert func()) {
 	}
 
 	fipsMode.setTrue()
-	log.Level(log.DebugLevel).Message("Secure SDK: FIPS mode enabled")
+	slog.Debug("Secure SDK: FIPS mode enabled")
 
 	return func() {
 		fipsMode.setFalse()
-		log.Level(log.DebugLevel).Message("Secure SDK: FIPS mode disabled")
+		slog.Debug("Secure SDK: FIPS mode disabled")
 	}
 }

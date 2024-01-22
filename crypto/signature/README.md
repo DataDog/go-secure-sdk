@@ -12,7 +12,7 @@ var ErrInvalidSignature = errors.New("invalid signature")
 
 ## Types
 
-### type [Algorithm](types.go#L6)
+### type [Algorithm](types.go#L3)
 
 `type Algorithm string`
 
@@ -28,13 +28,25 @@ const (
 )
 ```
 
-### type [Signer](api.go#L13)
+### type [KMSOption](kms.go#L142)
+
+`type KMSOption func(*kmsOptions)`
+
+KMSOption describes the functional pattern used for optional settings.
+
+#### func [WithKMSTimeout](kms.go#L149)
+
+`func WithKMSTimeout(d time.Duration) KMSOption`
+
+WithKMSTimeout defines the KMS operation timeout value.
+
+### type [Signer](api.go#L10)
 
 `type Signer interface { ... }`
 
 Signer describes signature producer contract.
 
-#### func [ECDSASigner](ecdsa.go#L18)
+#### func [ECDSASigner](ecdsa.go#L15)
 
 `func ECDSASigner(pk *ecdsa.PrivateKey) (Signer, error)`
 
@@ -75,7 +87,7 @@ if err := verifier.Verify(msg, sig); err != nil {
 
 ```
 
-#### func [Ed25519Signer](ed25519.go#L16)
+#### func [Ed25519Signer](ed25519.go#L13)
 
 `func Ed25519Signer(pk ed25519.PrivateKey) (Signer, error)`
 
@@ -121,7 +133,7 @@ if err := verifier.Verify(msg, sig); err != nil {
 
 ```
 
-#### func [FromPrivateKey](builder.go#L67)
+#### func [FromPrivateKey](builder.go#L64)
 
 `func FromPrivateKey(pk crypto.Signer) (Signer, error)`
 
@@ -155,7 +167,7 @@ fmt.Println(hex.Dump(append(sig, msg...)))
 
 ```
 
-#### func [FromPrivateKeyPEM](builder.go#L80)
+#### func [FromPrivateKeyPEM](builder.go#L77)
 
 `func FromPrivateKeyPEM(r io.Reader) (Signer, error)`
 
@@ -185,17 +197,24 @@ fmt.Println(hex.Dump(append(sig, msg...)))
 
 ```
 
-### type [Verifier](api.go#L25)
+#### func [RemoteSigner](kms.go#L21)
+
+`func RemoteSigner(ctx context.Context, remote kms.Service, opts ...KMSOption) (Signer, error)`
+
+RemoteSigner instantiates a signer which will use the remote KMS service as
+a private key holder and will send all signature request to this KMS.
+
+### type [Verifier](api.go#L22)
 
 `type Verifier interface { ... }`
 
 Verifier describes signature verifier contract.
 
-#### func [ECDSAVerifier](ecdsa.go#L79)
+#### func [ECDSAVerifier](ecdsa.go#L76)
 
 `func ECDSAVerifier(pub *ecdsa.PublicKey) (Verifier, error)`
 
-#### func [Ed25519Verifier](ed25519.go#L40)
+#### func [Ed25519Verifier](ed25519.go#L37)
 
 `func Ed25519Verifier(pub ed25519.PublicKey) (Verifier, error)`
 
@@ -203,7 +222,7 @@ Ed25519Verifier instantiates an EdDSA verifier using the Ed25519 signature schem
 
 Disabled in FIPS Mode.
 
-#### func [FromPublicKey](builder.go#L19)
+#### func [FromPublicKey](builder.go#L16)
 
 `func FromPublicKey(pub crypto.PublicKey) (Verifier, error)`
 
@@ -238,7 +257,7 @@ if err := v.Verify(msg, sig); err != nil {
 
 ```
 
-#### func [FromPublicKeyPEM](builder.go#L32)
+#### func [FromPublicKeyPEM](builder.go#L29)
 
 `func FromPublicKeyPEM(r io.Reader) (Verifier, error)`
 
@@ -269,6 +288,14 @@ if err := v.Verify(msg, sig); err != nil {
 }
 
 ```
+
+#### func [RemoteVerifier](kms.go#L122)
+
+`func RemoteVerifier(ctx context.Context, remote kms.PublicKeyExporter) (Verifier, error)`
+
+RemoteVerifier instantiates a local verifier based on the remote public key
+stored in Vault. This implementation doesn't handle key rotation, it will
+pull automatically the latest version of the target key.
 
 ## Sub Packages
 

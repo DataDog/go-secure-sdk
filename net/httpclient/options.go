@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package httpclient
 
 import (
+	"context"
+	"crypto/tls"
+	"net"
 	"time"
 )
 
@@ -17,6 +17,8 @@ type options struct {
 	disableResponseFilter bool
 	followRedirect        bool
 	maxRedirectionCount   int
+	tlsConfig             *tls.Config
+	tlsDialContext        func(context.Context, string, string) (net.Conn, error)
 }
 
 // WithTimeout sets the client timeout.
@@ -33,7 +35,7 @@ func WithDisableKeepAlives(value bool) Option {
 	}
 }
 
-// WithDisableKeepAlives disables the request filtering feature.
+// WithDisableRequestFilter disables the request filtering feature.
 func WithDisableRequestFilter(value bool) Option {
 	return func(o *options) {
 		o.disableRequestFilter = value
@@ -59,5 +61,19 @@ func WithFollowRedirect(value bool) Option {
 func WithMaxRedirectionCount(value int) Option {
 	return func(o *options) {
 		o.maxRedirectionCount = value
+	}
+}
+
+// WithTLSClientConfig sets the HTTP client TLS configuration to use for connection.
+func WithTLSClientConfig(value *tls.Config) Option {
+	return func(o *options) {
+		o.tlsConfig = value
+	}
+}
+
+// WithTLSDialer sets the TLS Dialer function to use to establish the connection.
+func WithTLSDialer(dialer func(context.Context, string, string) (net.Conn, error)) Option {
+	return func(o *options) {
+		o.tlsDialContext = dialer
 	}
 }

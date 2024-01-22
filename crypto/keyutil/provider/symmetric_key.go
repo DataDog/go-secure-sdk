@@ -1,9 +1,7 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package provider
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
@@ -50,8 +48,35 @@ func (sk *defaultSymmetricKey) AsBytes() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
-	return lb.Bytes(), nil
+	// Copy the key to prevent dereferencement
+	raw := make([]byte, lb.Size())
+	copy(raw, lb.Bytes())
+
+	return raw, nil
+}
+
+// AsCabin exports the symmetric secret as a secret cabin.
+// The key must be imported with the ExportableKey flag enabled.
+func (sk *defaultSymmetricKey) AsCabin(password []byte) ([]byte, error) {
+	if !sk.Can(ExportableKey) {
+		return nil, errors.New("this key is not exportable")
+	}
+
+	// Open enclave
+	lb, err := sk.key.Open()
+	if err != nil {
+		return nil, fmt.Errorf("unable to open key enclave: %w", err)
+	}
+	defer lb.Destroy()
+
+	var out bytes.Buffer
+	if err := encryption.SealSecretCabin(&out, lb, password); err != nil {
+		return nil, fmt.Errorf("unable to export symmetric key as a secret cabin: %w", err)
+	}
+
+	return out.Bytes(), nil
 }
 
 func (sk *defaultSymmetricKey) ValueEncryption() (encryption.ValueAEAD, error) {
@@ -64,6 +89,7 @@ func (sk *defaultSymmetricKey) ValueEncryption() (encryption.ValueAEAD, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	//nolint:wrapcheck
 	return encryption.Value(lb.Bytes())
@@ -79,6 +105,7 @@ func (sk *defaultSymmetricKey) ChunkedEncryption() (encryption.ChunkedAEAD, erro
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	//nolint:wrapcheck
 	return encryption.Chunked(lb.Bytes())
@@ -94,6 +121,7 @@ func (sk *defaultSymmetricKey) ConvergentEncryption() (encryption.ValueAEAD, err
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	//nolint:wrapcheck
 	return encryption.Convergent(lb.Bytes())
@@ -109,6 +137,7 @@ func (sk *defaultSymmetricKey) HMAC(h func() hash.Hash) (hash.Hash, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	return hmac.New(h, lb.Bytes()), nil
 }
@@ -123,6 +152,7 @@ func (sk *defaultSymmetricKey) NewCipher() (cipher.Block, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	//nolint:wrapcheck
 	return aes.NewCipher(lb.Bytes())
@@ -150,6 +180,7 @@ func (sk *defaultSymmetricKey) DeriveSymmetric(salt, info []byte, dkLen uint32, 
 	if err != nil {
 		return nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	// Generate a new key alias
 	keyAlias, err := newKeyAlias()
@@ -188,6 +219,7 @@ func (sk *defaultSymmetricKey) DeriveAsymmetric(salt, info []byte, kty keyutil.K
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to open key enclave: %w", err)
 	}
+	defer lb.Destroy()
 
 	// Generate a new key alias
 	keyAlias, err := newKeyAlias()

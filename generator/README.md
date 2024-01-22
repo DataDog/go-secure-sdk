@@ -10,3 +10,5 @@ Package generator provides various security related generators.
 
 * [randomness](./randomness): Package randomness provides `math/rand` dropin replace with secured initialization.
 
+* [token](./token): Package token provides verifiable string features.
+

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package provider
 
 import (
@@ -242,7 +239,7 @@ func (p *defaultProvider) Register(alias KeyAlias, keyFactory KeyFactory) error 
 	keyAlias := p.keyReducer(alias)
 
 	// Store the key into the appropriate backend.
-	var exist bool
+	exist := false
 	switch tk := k.(type) {
 	case PrivateKey:
 		_, exist = p.privateKeys.LoadOrStore(keyAlias, tk)

@@ -20,7 +20,7 @@ var (
 
 ## Functions
 
-### func [Create](create.go#L20)
+### func [Create](create.go#L16)
 
 `func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error`
 
@@ -28,7 +28,7 @@ Create an archive from given options to the given writer.
 
 ```golang
 // Create in-memory test filesystem.
-// This is used to override the default bazel behavior which creates symlinks
+// This is used to override the default bazel behaviour which creates symlinks
 // to testdata. The archive creation ignores symlinks by design which is
 // raising an error while using Bazel build.
 //
@@ -88,7 +88,7 @@ if err := gzw.Close(); err != nil {
 00000060  00 00 ff ff ab 85 9e 6c  00 08 00 00              |.......l....|
 ```
 
-### func [Extract](extract.go#L24)
+### func [Extract](extract.go#L19)
 
 `func Extract(r io.Reader, outPath string, opts ...Option) error`
 
@@ -146,71 +146,71 @@ f evil.sh
 
 ## Types
 
-### type [FileInfoFilterFunc](options.go#L28)
+### type [FileInfoFilterFunc](options.go#L25)
 
 `type FileInfoFilterFunc func(path string, fi fs.FileInfo) bool`
 
 FileInfoFilterFunc declares the function type used to take a boolean decision
 based on the path and the associated file information.
 
-### type [HeaderProcessorFunc](options.go#L31)
+### type [HeaderProcessorFunc](options.go#L28)
 
 `type HeaderProcessorFunc func(hdr *tar.Header) *tar.Header`
 
 HeaderProcessorFunc declares the function type used to pre-process Tar item headers.
 
-#### func [ResetHeaderTimes](options.go#L89)
+#### func [ResetHeaderTimes](options.go#L86)
 
 `func ResetHeaderTimes() HeaderProcessorFunc`
 
 ResetHeaderTimes returns a header processor used to reset Tar header times.
 Useful to get deterministic output.
 
-### type [Option](options.go#L24)
+### type [Option](options.go#L21)
 
 `type Option func(*options)`
 
 Option declares operation functional option.
 
-#### func [WithEmptyDirectories](options.go#L72)
+#### func [WithEmptyDirectories](options.go#L69)
 
 `func WithEmptyDirectories(value bool) Option`
 
 WithEmptyDirectories sets a flag to add directories during compression.
 
-#### func [WithExcludeFilter](options.go#L57)
+#### func [WithExcludeFilter](options.go#L54)
 
 `func WithExcludeFilter(value FileInfoFilterFunc) Option`
 
 WithExcludeFilter defines the function used to determine if an item should
 be excluded from the archive.
 
-#### func [WithHeaderRewritterFunc](options.go#L79)
+#### func [WithHeaderRewritterFunc](options.go#L76)
 
 `func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option`
 
 WithHeaderRewritterFunc sets the Tar item header rewritter interceptor.
 
-#### func [WithIncludeFilter](options.go#L49)
+#### func [WithIncludeFilter](options.go#L46)
 
 `func WithIncludeFilter(value FileInfoFilterFunc) Option`
 
 WithIncludeFilter defines the function used to determine if an item should
 be included in the archive.
 
-#### func [WithMaxEntryCount](options.go#L34)
+#### func [WithMaxEntryCount](options.go#L31)
 
 `func WithMaxEntryCount(value uint64) Option`
 
 WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 
-#### func [WithMaxFileSize](options.go#L41)
+#### func [WithMaxFileSize](options.go#L38)
 
 `func WithMaxFileSize(value uint64) Option`
 
 WithMaxFileSize overrides the default maximum file size for compression.
 
-#### func [WithOverwriteFilter](options.go#L65)
+#### func [WithOverwriteFilter](options.go#L62)
 
 `func WithOverwriteFilter(value FileInfoFilterFunc) Option`
 

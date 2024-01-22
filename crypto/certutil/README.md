@@ -4,7 +4,7 @@ Package certutil provides X.509 Certificate related functions.
 
 ## Functions
 
-### func [Fingerprint](fingerprint.go#L21)
+### func [Fingerprint](fingerprint.go#L18)
 
 `func Fingerprint(cert *x509.Certificate) ([]byte, error)`
 
@@ -21,6 +21,9 @@ reference from `keyutil.Fingerprint()`.
 ```golang
 // Decode certificate
 b, _ := pem.Decode(serverCertPEM)
+if b == nil {
+    panic("invalid PEM")
+}
 cert, err := x509.ParseCertificate(b.Bytes)
 if err != nil {
     panic(err)

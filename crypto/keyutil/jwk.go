@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
 	"bytes"
 	"crypto"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -41,6 +41,70 @@ func ToJWK(key any) (*jose.JSONWebKey, error) {
 	jwk.KeyID = base64.RawURLEncoding.EncodeToString(kid)
 
 	return &jwk, nil
+}
+
+// AttachCertificateToJWK attaches the given certificate to the JWK.
+func AttachCertificateToJWK(jwk *jose.JSONWebKey, cert *x509.Certificate) error {
+	// Check arguments
+	if jwk == nil {
+		return errors.New("unable to attach certificate to nil key")
+	}
+	if cert == nil {
+		return errors.New("unable to attach nil certificate to key")
+	}
+
+	// Check if the certificate is a CA.
+	// The first certificate must a leaf by standard.
+	if cert.IsCA {
+		if len(jwk.Certificates) == 0 {
+			return errors.New("unable to attach a CA certificate, the first certificate must be a leaf")
+		}
+	} else {
+		// Check if the key is usable in the content
+		if err := VerifyPublicKey(jwk, cert.PublicKey); err != nil {
+			return fmt.Errorf("the JWK content has an unusal key for the context: %w", err)
+		}
+
+		// Compute thumbprints for the Leaf certificate.
+		x5tSHA1 := sha1.Sum(cert.Raw)
+		x5tSHA256 := sha256.Sum256(cert.Raw)
+		jwk.CertificateThumbprintSHA1 = x5tSHA1[:]
+		jwk.CertificateThumbprintSHA256 = x5tSHA256[:]
+	}
+
+	// Attach certificate
+	jwk.Certificates = append(jwk.Certificates, cert)
+
+	return nil
+}
+
+// ToPublicJWKS encodes the giev keyset to a JSONWebKeySet.
+func ToPublicJWKS(keys ...crypto.PublicKey) (*jose.JSONWebKeySet, error) {
+	// Transform all given keys to public keys only.
+	index := map[string]jose.JSONWebKey{}
+	for i, k := range keys {
+		// Export key as JWK
+		jwk, err := ToJWK(k)
+		if err != nil {
+			return nil, fmt.Errorf("unable to encode key %d as JWK: %w", i, err)
+		}
+		if jwk == nil {
+			return nil, fmt.Errorf("got nil key without error when encoding key %d as JWK", i)
+		}
+
+		// Deduplicate keys
+		if _, present := index[jwk.KeyID]; !present {
+			index[jwk.KeyID] = jwk.Public()
+		}
+	}
+
+	// Deduplicate keys
+	result := &jose.JSONWebKeySet{}
+	for _, k := range index {
+		result.Keys = append(result.Keys, k)
+	}
+
+	return result, nil
 }
 
 // ToEncryptedJWK wraps the JWK encoded in a JWE container encrypted using

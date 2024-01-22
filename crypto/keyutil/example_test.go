@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
@@ -10,6 +7,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"strings"
 
 	"github.com/DataDog/go-secure-sdk/generator/randomness"
 
@@ -76,9 +74,15 @@ func ExampleToDERBytes() {
 func ExamplePublicKeyFingerprint() {
 	// Decode certificate
 	b, _ := pem.Decode(serverCertPEM)
+	if b == nil {
+		panic("invalid PEM")
+	}
 	cert, err := x509.ParseCertificate(b.Bytes)
 	if err != nil {
 		panic(err)
+	}
+	if cert == nil {
+		panic("invalid certificate")
 	}
 
 	out, err := PublicKeyFingerprint(cert)
@@ -145,4 +149,23 @@ func ExampleToEncryptedJWK() {
 
 	// Sample Output: eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJjdHkiOiJhcHBsaWNhdGlvbi9qd2sranNvbiIsImVuYyI6IkEyNTZHQ00iLCJwMmMiOjEyMDAwMCwicDJzIjoiQ2FlVno0dExSZEtKSEozSkFxakdkZyJ9.C_2fwhcpvnmXENVtV_h-ukQ28Yd9-j693MUQURcgPllUCnHO3-lBqw.oV4ZAjaUMr8Su5o7.1aT8dC2WIj8Wq1QlGetvIyIEEvTz79SXjszTvV0WRMfrJEu4VjWjXYjiMmajNaYsqAXWf5C6-P3-Hs8lR-vKZtHqNgafWQKOZM8nJkMkiwQOcMl_Q4EHV6ni7Ss4ZfRGQ_o8R2ONP9Y88_8tFppLMro1xGNQp1pBem_VHPn8787hLVHZHAfTV--rwvyJ3aRe_RePBZ4RSpjf5inGJPDkEOcAVa043iAF75HGwxu3wLkVyC3wKj4iEIyz-uv3OOG-bKkWci7BrCtPGcdSGNVFRWhoc-aJwgaW6NhdZRRvpviskg8fXg.rbwTiWoeXVMAQ5vMIuCUOQ
 	fmt.Printf("%s", jwe)
+}
+
+func ExampleFromEncryptedJWK() {
+	encryptedJWK := "eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJjdHkiOiJhcHBsaWNhdGlvbi9qd2sranNvbiIsImVuYyI6IkEyNTZHQ00iLCJwMmMiOjEyMDAwMCwicDJzIjoiQ2FlVno0dExSZEtKSEozSkFxakdkZyJ9.C_2fwhcpvnmXENVtV_h-ukQ28Yd9-j693MUQURcgPllUCnHO3-lBqw.oV4ZAjaUMr8Su5o7.1aT8dC2WIj8Wq1QlGetvIyIEEvTz79SXjszTvV0WRMfrJEu4VjWjXYjiMmajNaYsqAXWf5C6-P3-Hs8lR-vKZtHqNgafWQKOZM8nJkMkiwQOcMl_Q4EHV6ni7Ss4ZfRGQ_o8R2ONP9Y88_8tFppLMro1xGNQp1pBem_VHPn8787hLVHZHAfTV--rwvyJ3aRe_RePBZ4RSpjf5inGJPDkEOcAVa043iAF75HGwxu3wLkVyC3wKj4iEIyz-uv3OOG-bKkWci7BrCtPGcdSGNVFRWhoc-aJwgaW6NhdZRRvpviskg8fXg.rbwTiWoeXVMAQ5vMIuCUOQ"
+
+	// Pack the private key as JWK
+	jwk, err := FromEncryptedJWK(strings.NewReader(encryptedJWK), []byte("very-secret-password"))
+	if err != nil {
+		panic(err)
+	}
+
+	// Encode the JWK object as JSON
+	var out bytes.Buffer
+	if err := json.NewEncoder(&out).Encode(&jwk); err != nil {
+		panic(err)
+	}
+
+	// Output: {"kty":"EC","kid":"GQGzLJsjUVoKfbK5It-RQkmcJ7zSjPNHDre2htiQKjA","crv":"P-256","x":"4UldbrAX0tKLFvXxQ_er33af7vkmyn8B7K0WE_AuBWM","y":"VxV_08mpjH-jDu46Rl8khkeHu9luR-a9d6jZbLhtL-w","d":"E3IjbKFj-q0Q76lXxyEBG1x-bHuFK4NBTw2DzsvHuig"}
+	fmt.Printf("%s", out.String())
 }

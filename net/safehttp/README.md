@@ -20,7 +20,7 @@ var (
 
 ## Types
 
-### type [Cookie](cookie.go#L16)
+### type [Cookie](cookie.go#L13)
 
 `type Cookie struct { ... }`
 
@@ -29,7 +29,7 @@ HTTP response or the Cookie header of an HTTP request.
 
 See [https://tools.ietf.org/html/rfc6265](https://tools.ietf.org/html/rfc6265) for details.
 
-#### func [NewCookie](cookie.go#L29)
+#### func [NewCookie](cookie.go#L26)
 
 `func NewCookie(name, value string) *Cookie`
 
@@ -53,50 +53,50 @@ mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 ```
 
-#### func (*Cookie) [DisableHTTPOnly](cookie.go#L107)
+#### func (*Cookie) [DisableHTTPOnly](cookie.go#L104)
 
 `func (c *Cookie) DisableHTTPOnly()`
 
 DisableHTTPOnly disables the HttpOnly attribute.
 
-#### func (*Cookie) [DisableSecure](cookie.go#L102)
+#### func (*Cookie) [DisableSecure](cookie.go#L99)
 
 `func (c *Cookie) DisableSecure()`
 
 DisableSecure disables the secure attribute.
 
-#### func (*Cookie) [Domain](cookie.go#L97)
+#### func (*Cookie) [Domain](cookie.go#L94)
 
 `func (c *Cookie) Domain(domain string)`
 
 Domain sets the domain attribute.
 
-#### func (*Cookie) [MarkToDelete](cookie.go#L87)
+#### func (*Cookie) [MarkToDelete](cookie.go#L84)
 
 `func (c *Cookie) MarkToDelete()`
 
 MarkToDelete sets the cookie MaxAge to -1 which means that the cookie is
 going to be removed from the client.
 
-#### func (*Cookie) [Name](cookie.go#L112)
+#### func (*Cookie) [Name](cookie.go#L109)
 
 `func (c *Cookie) Name() string`
 
 Name returns the name of the cookie.
 
-#### func (*Cookie) [Path](cookie.go#L92)
+#### func (*Cookie) [Path](cookie.go#L89)
 
 `func (c *Cookie) Path(path string)`
 
 Path sets the path attribute.
 
-#### func (*Cookie) [SameSite](cookie.go#L65)
+#### func (*Cookie) [SameSite](cookie.go#L62)
 
 `func (c *Cookie) SameSite(s SameSite)`
 
 SameSite sets the SameSite attribute.
 
-#### func (*Cookie) [SetMaxAge](cookie.go#L81)
+#### func (*Cookie) [SetMaxAge](cookie.go#L78)
 
 `func (c *Cookie) SetMaxAge(maxAge int)`
 
@@ -106,7 +106,7 @@ SetMaxAge sets the MaxAge attribute.
 - MaxAge < 0 means delete cookie now, equivalently 'Max-Age: 0'
 - MaxAge > 0 means Max-Age attribute present and given in seconds
 
-#### func (*Cookie) [String](cookie.go#L124)
+#### func (*Cookie) [String](cookie.go#L121)
 
 `func (c *Cookie) String() string`
 
@@ -114,13 +114,13 @@ String returns the serialization of the cookie for use in a Set-Cookie
 response header. If c is nil or c.Name() is invalid, the empty string is
 returned.
 
-#### func (*Cookie) [Value](cookie.go#L117)
+#### func (*Cookie) [Value](cookie.go#L114)
 
 `func (c *Cookie) Value() string`
 
 Value returns the value of the cookie.
 
-### type [SameSite](cookie.go#L51)
+### type [SameSite](cookie.go#L48)
 
 `type SameSite int`
 
@@ -146,24 +146,26 @@ const (
 )
 ```
 
-### type [Server](server.go#L42)
+### type [Server](server.go#L40)
 
 `type Server struct { ... }`
 
 Server is a safe wrapper for a standard HTTP server.
-The zero value is safe and ready to use and will apply safe defaults on serving.
+It requires setting Mux before calling Serve.
 Changing any of the fields after the server has been started is a no-op.
 
-Ensure sane and secure values of `net/http.Server` struct:
+Ensures sane and secure values of `net/http.Server` struct:
 
+```go
 - Set the `ReadTimeout` to `10s`
 - Set the `ReadHeaderTimeout` to `5s`
 - Let WriteTimeout to be handled by the request handler
 - Set the `IdleTimeout` to `120s`
-- Set the `MaxHeaderBytes` to `64kb` (Go default to 1Mb)
+- Set the `MaxHeaderBytes` to `64kiB` (Go default to 1MiB)
 - Enforce TLS v1.2 as minimal supported version if `*tls.Config` is used
 - Provide a server shutdown function registry helper to trigger specific process when the server shutdown is called
 - Enforce a non-nil handler
+```
 
 ```golang
 
@@ -198,43 +200,37 @@ defer func() {
 
 ```
 
-#### func (*Server) [Clone](server.go#L160)
-
-`func (s *Server) Clone() *Server`
-
-Clone returns an unstarted deep copy of Server that can be re-configured and re-started.
-
-#### func (*Server) [Close](server.go#L226)
+#### func (*Server) [Close](server.go#L210)
 
 `func (s *Server) Close() error`
 
 Close is a wrapper for [https://golang.org/pkg/net/http/#Server.Close](https://golang.org/pkg/net/http/#Server.Close)
 
-#### func (*Server) [ListenAndServe](server.go#L171)
+#### func (*Server) [ListenAndServe](server.go#L160)
 
 `func (s *Server) ListenAndServe() error`
 
 ListenAndServe is a wrapper for [https://golang.org/pkg/net/http/#Server.ListenAndServe](https://golang.org/pkg/net/http/#Server.ListenAndServe)
 
-#### func (*Server) [ListenAndServeTLS](server.go#L182)
+#### func (*Server) [ListenAndServeTLS](server.go#L170)
 
 `func (s *Server) ListenAndServeTLS(certFile, keyFile string) error`
 
 ListenAndServeTLS is a wrapper for [https://golang.org/pkg/net/http/#Server.ListenAndServeTLS](https://golang.org/pkg/net/http/#Server.ListenAndServeTLS)
 
-#### func (*Server) [Serve](server.go#L193)
+#### func (*Server) [Serve](server.go#L180)
 
 `func (s *Server) Serve(l net.Listener) error`
 
 Serve is a wrapper for [https://golang.org/pkg/net/http/#Server.Serve](https://golang.org/pkg/net/http/#Server.Serve)
 
-#### func (*Server) [ServeTLS](server.go#L204)
+#### func (*Server) [ServeTLS](server.go#L190)
 
 `func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error`
 
 ServeTLS is a wrapper for [https://golang.org/pkg/net/http/#Server.ServeTLS](https://golang.org/pkg/net/http/#Server.ServeTLS)
 
-#### func (*Server) [Shutdown](server.go#L215)
+#### func (*Server) [Shutdown](server.go#L200)
 
 `func (s *Server) Shutdown(ctx context.Context) error`
 

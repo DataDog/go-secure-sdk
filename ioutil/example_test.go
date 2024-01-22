@@ -1,27 +1,36 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package ioutil
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
-	"strings"
+	"os"
 	"time"
 
 	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 func ExampleLimitCopy() {
-	// Simulate a large input
-	input := strings.NewReader(strings.Repeat("A", 2048))
+	root := os.DirFS("./testdata")
+
+	// Open 1Gb gzip bomb
+	bomb, err := root.Open("1g.gz")
+	if err != nil {
+		panic(err)
+	}
+
+	// Pass through the GZIP decompression reader
+	gzr, err := gzip.NewReader(bomb)
+	if err != nil {
+		panic(err)
+	}
 
 	// Copy decompressed data with hard limit to 1Mb.
 	//
 	// Why not using an io.LimitReader? Because the LimitReader truncate the
 	// data without raising an error.
-	_, err := LimitCopy(io.Discard, input, 1024)
+	_, err = LimitCopy(io.Discard, gzr, 1024)
 
 	// Output: truncated copy due to too large input
 	fmt.Printf("%v", err)

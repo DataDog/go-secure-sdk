@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package transformer
 
 // Identity initializes a transformer which doesn't alter the given value.

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package provider
 
 import (
@@ -10,6 +7,7 @@ import (
 	"github.com/awnumar/memguard"
 	"github.com/stretchr/testify/require"
 
+	"github.com/DataDog/go-secure-sdk/crypto/encryption"
 	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 )
 
@@ -65,6 +63,41 @@ func TestSymmetricKey_AsBytes(t *testing.T) {
 		got, err := w.AsBytes()
 		require.NoError(t, err)
 		require.Equal(t, []byte{0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39}, got)
+	})
+}
+
+func TestSymmetricKey_AsCabin(t *testing.T) {
+	t.Parallel()
+
+	t.Run("not exportable", func(t *testing.T) {
+		t.Parallel()
+
+		w := &defaultSymmetricKey{
+			alias:    KeyAlias("testing"),
+			key:      memguard.NewEnclave([]byte("123456789123456789")),
+			purposes: Purposes(SignaturePurpose),
+		}
+
+		got, err := w.AsCabin([]byte("test-password"))
+		require.Error(t, err)
+		require.Nil(t, got)
+	})
+
+	t.Run("exportable", func(t *testing.T) {
+		t.Parallel()
+
+		w := &defaultSymmetricKey{
+			alias:    KeyAlias("testing"),
+			key:      memguard.NewEnclave([]byte("123456789123456789")),
+			purposes: Purposes(SignaturePurpose, ExportableKey),
+		}
+
+		got, err := w.AsCabin([]byte("test-password-000"))
+		require.NoError(t, err)
+
+		lb, err := encryption.ParseSecretCabin(got, []byte("test-password-000"))
+		require.NoError(t, err)
+		require.Equal(t, []byte("123456789123456789"), lb.Bytes())
 	})
 }
 

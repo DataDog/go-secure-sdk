@@ -1,14 +1,14 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package provider
 
 import (
+	"bytes"
 	"crypto"
 	"errors"
+	"fmt"
 
 	"gopkg.in/square/go-jose.v2"
 
+	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 	"github.com/DataDog/go-secure-sdk/crypto/signature"
 )
 
@@ -66,6 +66,17 @@ func (pub *defaultPublicKey) AsJWK() (string, error) {
 
 	// Encode JWK as JSON
 	return asJSON(k)
+}
+
+// AsCabin exports the public key as a secret cabin.
+// The key must be imported with the ExportableKey flag enabled.
+func (pub *defaultPublicKey) AsCabin(password []byte) ([]byte, error) {
+	var out bytes.Buffer
+	if err := keyutil.ToCabinPEM(&out, pub.key, password); err != nil {
+		return nil, fmt.Errorf("unable to encode cabin PEM: %w", err)
+	}
+
+	return out.Bytes(), nil
 }
 
 // Verifier returns a verifier created from the public key.

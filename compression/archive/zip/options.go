@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import (
@@ -10,16 +7,17 @@ import (
 )
 
 type options struct {
-	CompressionLevel    int
-	MaxArchiveSize      uint64
-	MaxEntryCount       uint64
-	MaxFileSize         uint64
-	IncludeFilter       FileInfoFilterFunc
-	ExcludeFilter       FileInfoFilterFunc
-	CompressFilter      FileInfoFilterFunc
-	OverwriteFilter     FileInfoFilterFunc
-	AddEmptyDirectories bool
-	HeaderRewritter     HeaderProcessorFunc
+	CompressionLevel           int
+	MaxArchiveSize             uint64
+	MaxEntryCount              uint64
+	MaxFileSize                uint64
+	MaxExplosionMagnitudeOrder uint64
+	IncludeFilter              FileInfoFilterFunc
+	ExcludeFilter              FileInfoFilterFunc
+	CompressFilter             FileInfoFilterFunc
+	OverwriteFilter            FileInfoFilterFunc
+	AddEmptyDirectories        bool
+	HeaderRewritter            HeaderProcessorFunc
 }
 
 // Option declares operation functional option.
@@ -50,6 +48,14 @@ func WithMaxEntryCount(value uint64) Option {
 func WithMaxFileSize(value uint64) Option {
 	return func(o *options) {
 		o.MaxFileSize = value
+	}
+}
+
+// WithMaxExplosionMagnitudeOrder overrides the default maximum size explosion
+// magnitude order.
+func WithMaxExplosionMagnitudeOrder(value uint64) Option {
+	return func(o *options) {
+		o.MaxExplosionMagnitudeOrder = value
 	}
 }
 
@@ -109,11 +115,7 @@ func ResetHeaderTimes() HeaderProcessorFunc {
 			return nil
 		}
 
-		hdr.Modified = time.Time{}.UTC()
-		//nolint:staticcheck // SA1019
-		hdr.ModifiedDate = 0
-		//nolint:staticcheck // SA1019
-		hdr.ModifiedTime = 0
+		hdr.SetModTime(time.Time{})
 
 		return hdr
 	}

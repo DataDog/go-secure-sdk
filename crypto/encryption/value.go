@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package encryption
 
 import (
@@ -34,7 +31,7 @@ func ValueWithMode(mode Mode, key []byte) (ValueAEAD, error) {
 	keyRaw := make([]byte, len(key))
 	copy(keyRaw, key)
 
-	// Select the appropriate mode
+	// Select appropriate mode
 	switch mode {
 	case FIPS:
 		return &valueAEAD{
@@ -46,7 +43,7 @@ func ValueWithMode(mode Mode, key []byte) (ValueAEAD, error) {
 	case Modern:
 		// If FIPS compliance is enabled use FIPS compliant cipher suite.
 		if security.InFIPSMode() {
-			return nil, errors.New("modern cipher is disabled in FIPS mode")
+			return nil, errors.New("Modern cipher is disabled in FIPS mode")
 		}
 
 		return &valueAEAD{

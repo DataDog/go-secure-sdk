@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 // Package d4 provides Modern compliant chunked encryption system
 package d4
 
@@ -201,7 +198,7 @@ func encrypt(rand io.Reader, key []byte, plaintext io.Reader, aad []byte, out io
 		}
 
 		// Increment chunck counter
-		chunkCounter++
+		chunkCounter = chunkCounter + 1
 	}
 
 	return nil
@@ -246,7 +243,7 @@ func decrypt(key []byte, ciphertext io.Reader, aad []byte, out io.Writer) error 
 
 	// Derive all key materials
 	var eK [encryptionKeyLen + encryptionNonceLen]byte
-	h := hkdf.New(sha256.New, key, nonce, []byte("datadog-chunk-encryption-keys-v2"))
+	h := hkdf.New(sha256.New, key, nonce[:], []byte("datadog-chunk-encryption-keys-v2"))
 	if _, err := io.ReadFull(h, eK[:]); err != nil {
 		return fmt.Errorf("unable to derive encryption master key: %w", err)
 	}
@@ -267,7 +264,7 @@ func decrypt(key []byte, ciphertext io.Reader, aad []byte, out io.Writer) error 
 
 	for {
 		// Read a ciphertext chunk
-		n, err := io.ReadFull(ciphertext, chunkRaw)
+		n, err := io.ReadFull(ciphertext, chunkRaw[:])
 		if err != nil {
 			if !errors.Is(err, io.ErrUnexpectedEOF) {
 				return fmt.Errorf("unable to read ciphertext content: %w", err)
@@ -321,7 +318,7 @@ func decrypt(key []byte, ciphertext io.Reader, aad []byte, out io.Writer) error 
 		}
 
 		// Increment chunk counter
-		chunkCounter++
+		chunkCounter = chunkCounter + 1
 	}
 
 	return nil

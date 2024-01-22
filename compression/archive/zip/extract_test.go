@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import (
@@ -16,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/DataDog/go-secure-sdk/crypto/encryption"
 	"github.com/DataDog/go-secure-sdk/crypto/hashutil"
 	"github.com/DataDog/go-secure-sdk/vfs"
 )
@@ -24,6 +22,40 @@ func TestExtract_Golden(t *testing.T) {
 	t.Parallel()
 
 	root := os.DirFS("./testdata")
+
+	// Prepare a chunked encryption layer
+	aead, err := encryption.Chunked([]byte("warning-infected-archive-can-trigger-antivirus"))
+	require.NoError(t, err)
+
+	require.NoError(t, fs.WalkDir(root, "infected", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		f, err := root.Open(path)
+		if err != nil {
+			return fmt.Errorf("unable to open file: %w", err)
+		}
+
+		// Copy in memory (zip lib can't read from a reader directly)
+		var zipFile bytes.Buffer
+		err = aead.Open(&zipFile, f)
+		require.NoError(t, err)
+
+		// Create a test instance
+		t.Run(path, func(t *testing.T) {
+			t.Parallel()
+
+			err := Extract(bytes.NewReader(zipFile.Bytes()), uint64(zipFile.Len()), t.TempDir())
+			require.Error(t, err)
+		})
+
+		return nil
+	}))
 
 	require.NoError(t, fs.WalkDir(root, "bad", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -89,6 +121,35 @@ func TestExtract_Golden(t *testing.T) {
 
 		return nil
 	}))
+}
+
+func TestExtract_SuspiciousExpansion(t *testing.T) {
+	t.Parallel()
+
+	root := os.DirFS("./testdata/infected")
+
+	// Prepare a chunked encryption layer
+	aead, err := encryption.Chunked([]byte("warning-infected-archive-can-trigger-antivirus"))
+	require.NoError(t, err)
+
+	f, err := root.Open("zbsm.enc.zip")
+	require.NoError(t, err)
+
+	// Copy in memory (zip lib can't read from a reader directly)
+	var zipFile bytes.Buffer
+	err = aead.Open(&zipFile, f)
+	require.NoError(t, err)
+
+	err = Extract(bytes.NewReader(zipFile.Bytes()), uint64(zipFile.Len()), t.TempDir())
+	require.Error(t, err)
+	var explosionErr *ErrExpansionExplosion
+	require.ErrorAs(t, err, &explosionErr)
+	require.NotNil(t, explosionErr)
+	require.Equal(t, "0", explosionErr.Filename)
+	require.Equal(t, uint64(6), explosionErr.MagnitudeOrder)
+	require.Equal(t, uint64(30357), explosionErr.CompressedFileSize)
+	require.Equal(t, uint64(21849182), explosionErr.UncompressedFileSize)
+	require.ErrorIs(t, err, &ErrExpansionExplosion{Filename: "0", MagnitudeOrder: 6, CompressedFileSize: 30357, UncompressedFileSize: 21849182})
 }
 
 func TestExtract_WithOverwrite(t *testing.T) {

@@ -37,7 +37,7 @@ var (
 
 ## Functions
 
-### func [FromProfile](generator.go#L40)
+### func [FromProfile](generator.go#L37)
 
 `func FromProfile(p *Profile) (string, error)`
 
@@ -55,7 +55,7 @@ fmt.Println(password)
 
 ```
 
-### func [Generate](generator.go#L19)
+### func [Generate](generator.go#L16)
 
 `func Generate(length, numDigits, numSymbol int, noUpper, allowRepeat bool) (string, error)`
 
@@ -73,7 +73,7 @@ fmt.Println(password)
 
 ```
 
-### func [NoSymbol](generator.go#L58)
+### func [NoSymbol](generator.go#L55)
 
 `func NoSymbol() (string, error)`
 
@@ -92,7 +92,7 @@ fmt.Println(password)
 
 ```
 
-### func [Paranoid](generator.go#L52)
+### func [Paranoid](generator.go#L49)
 
 `func Paranoid() (string, error)`
 
@@ -111,7 +111,7 @@ fmt.Println(password)
 
 ```
 
-### func [Strong](generator.go#L64)
+### func [Strong](generator.go#L61)
 
 `func Strong() (string, error)`
 
@@ -132,7 +132,7 @@ fmt.Println(password)
 
 ## Types
 
-### type [Profile](profile.go#L7)
+### type [Profile](profile.go#L4)
 
 `type Profile struct { ... }`
 

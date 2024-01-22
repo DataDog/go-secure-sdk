@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package v2
 
 import (
@@ -25,6 +22,8 @@ func ComputeProtected(algorithm signature.Algorithm, ts uint64, kid, contentType
 	// Due to its different internal construction HMAC is not vulnerable to this
 	// attack.
 	//
+	// More information. http://dtdg.co/skb-data-protection-error-detection-hash-dsig
+	//
 	// Alternatively SHA3 could be used, but not sufficiently optimized in this
 	// current Go version (1.19.5).
 	h := hmac.New(sha256.New, []byte("datadog-envelope-content-hash-v1"))
@@ -48,7 +47,7 @@ func ComputeProtected(algorithm signature.Algorithm, ts uint64, kid, contentType
 		[]byte(algorithm),                       // Used algorithm (How)
 		kid,                                     // Public key binding (Who)
 		tsRaw[:],                                // When
-		hContent,                                // What
+		hContent[:],                             // What
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to prepare protected pieces: %w", err)

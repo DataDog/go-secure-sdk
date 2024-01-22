@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package tar
 
 import (
@@ -20,7 +17,7 @@ import (
 
 func ExampleCreate() {
 	// Create in-memory test filesystem.
-	// This is used to override the default bazel behavior which creates symlinks
+	// This is used to override the default bazel behaviour which creates symlinks
 	// to testdata. The archive creation ignores symlinks by design which is
 	// raising an error while using Bazel build.
 	//

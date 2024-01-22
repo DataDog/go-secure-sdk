@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import (
@@ -10,14 +7,13 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
+	"strings"
 
 	"github.com/DataDog/go-secure-sdk/ioutil"
-	"github.com/DataDog/go-secure-sdk/log"
 )
 
 // Create an archive from given options to the given writer.
-//
-//nolint:gocognit,gocyclo
 func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 	// Check arguments
 	if fileSystem == nil {
@@ -79,6 +75,9 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 		if !fi.IsDir() && !fi.Mode().IsRegular() {
 			return nil
 		}
+		if file == "." {
+			return nil
+		}
 
 		// Check file size
 		if fi.Size() > int64(dopts.MaxFileSize) {
@@ -130,6 +129,11 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 			return nil
 		}
 
+		// Suffix directory name with a slash
+		if fi.IsDir() && !strings.HasSuffix(header.Name, "/") {
+			header.Name += "/"
+		}
+
 		// Create Zip file entry
 		zf, err := zw.CreateHeader(header)
 		if err != nil {
@@ -144,7 +148,7 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 			}
 			defer func(closer io.Closer) {
 				if err := closer.Close(); err != nil {
-					log.Error(err).Messagef("unable to close source file %q", file)
+					slog.Error("unable to successfully close the file", "err", err, "file", file)
 				}
 			}(data)
 

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package encryption
 
 import "io"
@@ -9,6 +6,7 @@ import "io"
 type Mode uint
 
 const (
+	// Keep 0 for automatic detection (TODO)
 	// FIPS mode uses FIPS compliant encryption ciphersuites.
 	// D1 => HKDF-SHA256_AES256-CTR_HMAC-SHA256
 	FIPS Mode = iota + 1
@@ -45,7 +43,7 @@ type ValueAEAD interface {
 	CipherID() uint8
 }
 
-// ChunkedEncryptor represents chunked encryption operations.
+// ChunkEncryptor represents chunked encryption operations.
 type ChunkedEncryptor interface {
 	// Seal the given plaintext.
 	Seal(dst io.Writer, plaintext io.Reader) error
@@ -54,7 +52,7 @@ type ChunkedEncryptor interface {
 	SealWithContext(dst io.Writer, plaintext io.Reader, context ...[]byte) error
 }
 
-// ChunkedDecryptor represents chunked decryption operations.
+// ChunkDecryptor represents chunked decryption operations.
 type ChunkedDecryptor interface {
 	// Open decrypts the given ciphertext.
 	Open(dst io.Writer, ciphertext io.Reader) error

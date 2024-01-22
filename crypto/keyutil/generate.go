@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
@@ -119,10 +116,19 @@ func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto
 func PublicKey(priv any) (crypto.PublicKey, error) {
 	switch k := priv.(type) {
 	case *rsa.PrivateKey:
+		if k == nil {
+			return nil, errors.New("private key is nil")
+		}
 		return &k.PublicKey, nil
 	case *ecdsa.PrivateKey:
+		if k == nil {
+			return nil, errors.New("private key is nil")
+		}
 		return &k.PublicKey, nil
 	case ed25519.PrivateKey:
+		if k == nil {
+			return nil, errors.New("private key is nil")
+		}
 		return k.Public(), nil
 	case jose.JSONWebKey:
 		if k.IsPublic() {
@@ -130,11 +136,17 @@ func PublicKey(priv any) (crypto.PublicKey, error) {
 		}
 		return k.Public().Key, nil
 	case *jose.JSONWebKey:
+		if k == nil {
+			return nil, errors.New("private key is nil")
+		}
 		if k.IsPublic() {
 			return k.Key, nil
 		}
 		return k.Public().Key, nil
 	case *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey:
+		if k == nil {
+			return nil, errors.New("public key is nil")
+		}
 		return k, nil
 	default:
 		return nil, fmt.Errorf("unrecognized key type: %T", priv)
@@ -198,5 +210,34 @@ func VerifyPair(pubkey crypto.PublicKey, key crypto.PrivateKey) error {
 	default:
 		return fmt.Errorf("unsupported public key type %T", pub)
 	}
+	return nil
+}
+
+// VerifyPublicKey verifies that the given public key matches the given input.
+func VerifyPublicKey(input any, key crypto.PublicKey) error {
+	// Extract public key from input
+	pubkey, err := PublicKey(input)
+	if err != nil {
+		return fmt.Errorf("unable to extract public key from the input: %w", err)
+	}
+
+	// Check if the public key matches
+	switch pub := pubkey.(type) {
+	case *rsa.PublicKey:
+		if !pub.Equal(key) {
+			return errors.New("private key does not match public key")
+		}
+	case *ecdsa.PublicKey:
+		if !pub.Equal(key) {
+			return errors.New("private key does not match public key")
+		}
+	case ed25519.PublicKey:
+		if !pub.Equal(key) {
+			return errors.New("private key does not match public key")
+		}
+	default:
+		return fmt.Errorf("unsupported public key type %T", pub)
+	}
+
 	return nil
 }

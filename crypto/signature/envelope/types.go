@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package envelope
 
 import (
@@ -35,6 +32,6 @@ type Signature struct {
 	PublicKeyID []byte              `json:"pubkey"`
 	Timestamp   uint64              `json:"timestamp"`
 	Proof       []byte              `json:"proof"`
-	// Deprecated: V2 ignore this value during protected content computation.
+	// Deprecated in v2
 	Nonce []byte `json:"nonce,omitempty"`
 }

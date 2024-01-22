@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package envelope
 
 import (
@@ -60,7 +57,7 @@ func WrapAndSign(contentType string, payload []byte, signer signature.Signer, op
 
 	return &Envelope{
 		ContentType: contentType,
-		Content:     payload,
+		Content:     payload[:],
 		Signature: &Signature{
 			Version:     protectedv2.Version,
 			Algorithm:   alg,

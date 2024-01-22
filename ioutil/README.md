@@ -19,7 +19,7 @@ var ErrTruncatedCopy = errors.New("truncated copy due to too large input")
 
 ## Functions
 
-### func [LimitCopy](copy.go#L19)
+### func [LimitCopy](copy.go#L16)
 
 `func LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (uint64, error)`
 
@@ -28,14 +28,25 @@ the maxSize amount of data has been written to the given writer and raise an
 error.
 
 ```golang
-// Simulate a large input
-input := strings.NewReader(strings.Repeat("A", 2048))
+root := os.DirFS("./testdata")
+
+// Open 1Gb gzip bomb
+bomb, err := root.Open("1g.gz")
+if err != nil {
+    panic(err)
+}
+
+// Pass through the GZIP decompression reader
+gzr, err := gzip.NewReader(bomb)
+if err != nil {
+    panic(err)
+}
 
 // Copy decompressed data with hard limit to 1Mb.
 //
 // Why not using an io.LimitReader? Because the LimitReader truncate the
 // data without raising an error.
-_, err := LimitCopy(io.Discard, input, 1024)
+_, err = LimitCopy(io.Discard, gzr, 1024)
 ```
 
  Output:
@@ -44,7 +55,7 @@ _, err := LimitCopy(io.Discard, input, 1024)
 truncated copy due to too large input
 ```
 
-### func [LimitWriter](limit_writer.go#L20)
+### func [LimitWriter](limit_writer.go#L17)
 
 `func LimitWriter(w io.Writer, limit int) io.Writer`
 
@@ -67,7 +78,7 @@ if err != nil {
 1024
 ```
 
-### func [TimeoutReader](timeout.go#L25)
+### func [TimeoutReader](timeout.go#L22)
 
 `func TimeoutReader(reader io.Reader, timeout time.Duration) io.Reader`
 

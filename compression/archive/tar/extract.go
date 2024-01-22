@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package tar
 
 import (
@@ -19,8 +16,6 @@ import (
 //
 // outPath must be controlled by the developer and verified before being used as
 // the extraction path.
-//
-//nolint:gocognit,gocyclo
 func Extract(r io.Reader, outPath string, opts ...Option) error {
 	// Check arguments
 	if r == nil {

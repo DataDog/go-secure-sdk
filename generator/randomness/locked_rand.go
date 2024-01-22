@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package randomness
 
 import (
@@ -11,7 +8,7 @@ import (
 // NewLockedRand implements a threadsafe wrapper to the math/rand.Rand implementation.
 func NewLockedRand(seed int64) *LockedRand {
 	return &LockedRand{
-		//nolint:gosec // Expected behavior.
+		//nolint:gosec // Expected behaviour.
 		r: rand.New(rand.NewSource(seed)),
 	}
 }

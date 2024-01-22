@@ -19,7 +19,7 @@
           default = pkgs.mkShell
               {
                 buildInputs = [
-                  pkgs.go_1_20
+                  pkgs.go_1_21
                   pkgs.gotestsum
                   pkgs.golangci-lint
                   pkgs.mockgen
