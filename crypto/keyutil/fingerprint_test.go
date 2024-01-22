@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
@@ -45,8 +42,10 @@ func TestPublicKeyFingerprint(t *testing.T) {
 	t.Parallel()
 
 	b, _ := pem.Decode(serverCertPEM)
+	require.NotNil(t, b)
 	cert, err := x509.ParseCertificate(b.Bytes)
 	require.NoError(t, err)
+	require.NotNil(t, cert)
 
 	t.Run("nil", func(t *testing.T) {
 		t.Parallel()

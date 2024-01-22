@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package ioutil
 
 import (
@@ -30,23 +27,26 @@ func TimeoutReader(reader io.Reader, timeout time.Duration) io.Reader {
 }
 
 // Read implements io.Reader interface.
-func (r *timeoutReader) Read(buf []byte) (n int, err error) {
+func (r *timeoutReader) Read(buf []byte) (int, error) {
 	// Check arguments
 	if r.reader == nil {
 		return 0, errors.New("reader must not be nil")
 	}
 
-	ch := make(chan bool, 1)
-	n = 0
-	err = nil
+	type result struct {
+		n   int
+		err error
+	}
+	ch := make(chan result, 1)
+
 	go func() {
-		n, err = r.reader.Read(buf)
-		ch <- true
+		n, err := r.reader.Read(buf)
+		ch <- result{n, err}
 	}()
 
 	select {
-	case <-ch:
-		return
+	case result := <-ch:
+		return result.n, result.err
 	case <-time.After(r.timeout):
 		return 0, ErrReaderTimedOut
 	}

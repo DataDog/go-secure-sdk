@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package randomness
 
 import (
@@ -84,7 +81,7 @@ func ExpFloat64() float64 { return globalRand.ExpFloat64() }
 
 // Reader exposes a thread-safe PRNG infinite random bytes generator initialized
 // with a CSPRNG. Due to its infinite nature, you must ensure a data read limit
-// in time or space to prevent hanging reader behavior.
+// in time or space to prevent hanging reader behaviour.
 //
 // This reader is initialized with a different seed to ensure no collision
 // between the atomic generation function calls and the stream generator.

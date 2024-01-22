@@ -25,11 +25,11 @@ const (
 
 ## Functions
 
-### func [Basic](generator.go#L49)
+### func [Basic](generator.go#L46)
 
 `func Basic() (string, error)`
 
-Basic generates 4 words diceware passphrase.
+Basic generates 4 words diceware passphrase
 
 ```golang
 
@@ -44,11 +44,11 @@ fmt.Println(passphrase)
 
 ```
 
-### func [Diceware](generator.go#L29)
+### func [Diceware](generator.go#L26)
 
 `func Diceware(count int) (string, error)`
 
-Diceware generates a passphrase using english words.
+Diceware generates a passphrase using english words
 
 ```golang
 
@@ -63,17 +63,17 @@ fmt.Println(passphrase)
 
 ```
 
-### func [Master](generator.go#L64)
+### func [Master](generator.go#L61)
 
 `func Master() (string, error)`
 
-Master generates 24 words diceware passphrase.
+Master generates 24 words diceware passphrase
 
-### func [Paranoid](generator.go#L59)
+### func [Paranoid](generator.go#L56)
 
 `func Paranoid() (string, error)`
 
-Paranoid generates 12 words diceware passphrase.
+Paranoid generates 12 words diceware passphrase
 
 ```golang
 
@@ -88,11 +88,11 @@ fmt.Println(passphrase)
 
 ```
 
-### func [Strong](generator.go#L54)
+### func [Strong](generator.go#L51)
 
 `func Strong() (string, error)`
 
-Strong generates 8 words diceware passphrase.
+Strong generates 8 words diceware passphrase
 
 ```golang
 

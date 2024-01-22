@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package randomness
 
 import (
@@ -9,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/keybase/go-crypto/pbkdf2"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 func ExampleDRNG() {

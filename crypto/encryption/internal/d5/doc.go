@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 // Package d5 provides FIPS compliant deterministic encryption system
 //
 // Convergent encryption, also known as content hash keying, is a cryptosystem

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
@@ -119,6 +116,14 @@ func TestPublicKey(t *testing.T) {
 		t.Parallel()
 
 		pub, err := PublicKey(nil)
+		require.Error(t, err)
+		require.Nil(t, pub)
+	})
+
+	t.Run("typed nil", func(t *testing.T) {
+		t.Parallel()
+
+		pub, err := PublicKey((*rsa.PrivateKey)(nil))
 		require.Error(t, err)
 		require.Nil(t, pub)
 	})
@@ -395,4 +400,47 @@ func TestGenerateDefaultKeyPair(t *testing.T) {
 
 	_, _, err = GenerateKeyPair(ED25519)
 	require.NoError(t, err)
+}
+
+func TestVerifyPublicKey(t *testing.T) {
+	t.Parallel()
+
+	pk1, err := rsa.GenerateKey(rand.Reader, defaultRSAKeySize)
+	require.NoError(t, err)
+	pk2, err := ecdsa.GenerateKey(defaultECKeyCurve, rand.Reader)
+	require.NoError(t, err)
+	pub3, _, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	t.Run("nil pub", func(t *testing.T) {
+		t.Parallel()
+
+		require.Error(t, VerifyPublicKey(nil, pk1.Public()))
+	})
+
+	t.Run("nil pk", func(t *testing.T) {
+		t.Parallel()
+
+		require.Error(t, VerifyPublicKey(pub3, nil))
+	})
+
+	t.Run("rsa", func(t *testing.T) {
+		t.Parallel()
+
+		require.Error(t, VerifyPublicKey(pk1.Public(), pk2.Public()))
+		require.NoError(t, VerifyPublicKey(pk1.Public(), pk1.Public()))
+	})
+
+	t.Run("ec", func(t *testing.T) {
+		t.Parallel()
+
+		require.Error(t, VerifyPublicKey(pk2.Public(), pub3))
+		require.NoError(t, VerifyPublicKey(pk2.Public(), pk2.Public()))
+	})
+
+	t.Run("ed25519", func(t *testing.T) {
+		t.Parallel()
+
+		require.NoError(t, VerifyPublicKey(pub3, pub3))
+	})
 }

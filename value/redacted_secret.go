@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package value
 
 import (
@@ -68,7 +65,7 @@ func (Redacted[T]) GoString() string {
 
 // Format implements string formatter.
 // Implements fmt.Formatter
-func (Redacted[T]) Format(f fmt.State, c rune) {
+func (Redacted[T]) Format(f fmt.State, _ rune) {
 	if _, err := f.Write([]byte(redactedToken)); err != nil {
 		panic(err)
 	}

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package encryption
 
 import (
@@ -95,5 +92,5 @@ func RotateKey(oldkeys [][]byte, newkey, ciphertext []byte, context ...[]byte) (
 		return nil, fmt.Errorf("unable to rotate encryption key, encryption failed: %w", err)
 	}
 
-	return newciphertext, err
+	return
 }

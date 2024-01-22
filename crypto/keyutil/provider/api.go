@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 // Package provider provides Key provider contract and standard implementations.
 package provider
 
@@ -132,6 +129,9 @@ type PrivateKey interface {
 
 	// Signer returns a signer if the key can be used for signing purpose.
 	Signer() (signature.Signer, error)
+	// AsCabin exports the private key as a Datadog secret cabin if the key is
+	// flagged as exportable.
+	AsCabin(password []byte) ([]byte, error)
 }
 
 // SymmetricKey describes symmetric key provider item.
@@ -141,6 +141,9 @@ type SymmetricKey interface {
 	// AsBytes exports the symmetric key as byte array if the key is flagged as
 	// exportable.
 	AsBytes() ([]byte, error)
+	// AsCabin exports the symmetric key as a Datadog secret cabin if the key is
+	// flagged as exportable.
+	AsCabin(password []byte) ([]byte, error)
 	// ValueEncryption returns a single value encryption system initialized with
 	// the symmetric key.
 	ValueEncryption() (encryption.ValueAEAD, error)

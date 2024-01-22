@@ -8,3 +8,5 @@ Package net provides network security related functions.
 
 * [safehttp](./safehttp): Package safehttp provides hardened HTTP related default functions.
 
+* [tlsclient](./tlsclient): Package tlsclient provides hardened TLS dialer functions.
+

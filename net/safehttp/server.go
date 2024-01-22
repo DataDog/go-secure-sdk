@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package safehttp
 
 import (
@@ -10,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,19 +24,19 @@ var (
 )
 
 // Server is a safe wrapper for a standard HTTP server.
-// The zero value is safe and ready to use and will apply safe defaults on serving.
+// It requires setting Mux before calling Serve.
 // Changing any of the fields after the server has been started is a no-op.
 //
-// Ensure sane and secure values of `net/http.Server` struct:
+// Ensures sane and secure values of `net/http.Server` struct:
 //
-// - Set the `ReadTimeout` to `10s`
-// - Set the `ReadHeaderTimeout` to `5s`
-// - Let WriteTimeout to be handled by the request handler
-// - Set the `IdleTimeout` to `120s`
-// - Set the `MaxHeaderBytes` to `64kb` (Go default to 1Mb)
-// - Enforce TLS v1.2 as minimal supported version if `*tls.Config` is used
-// - Provide a server shutdown function registry helper to trigger specific process when the server shutdown is called
-// - Enforce a non-nil handler
+//   - Set the `ReadTimeout` to `10s`
+//   - Set the `ReadHeaderTimeout` to `5s`
+//   - Let WriteTimeout to be handled by the request handler
+//   - Set the `IdleTimeout` to `120s`
+//   - Set the `MaxHeaderBytes` to `64kiB` (Go default to 1MiB)
+//   - Enforce TLS v1.2 as minimal supported version if `*tls.Config` is used
+//   - Provide a server shutdown function registry helper to trigger specific process when the server shutdown is called
+//   - Enforce a non-nil handler
 type Server struct {
 	// Addr optionally specifies the TCP address for the server to listen on,
 	// in the form "host:port". If empty, ":http" (port 80) is used.
@@ -87,22 +85,19 @@ type Server struct {
 
 	// OnShutdown is a slice of functions to call on Shutdown.
 	// This can be used to gracefully shutdown connections.
-	OnShudown []func()
+	OnShutdown []func()
 
 	// DisableKeepAlives controls whether HTTP keep-alives should be disabled.
 	DisableKeepAlives bool
 
-	srv     *http.Server
-	started bool
+	// srv is not nil after the server has been started
+	srv atomic.Pointer[http.Server]
 }
 
 func (s *Server) buildServer() error {
-	if s.started {
-		return ErrServerAlreadyStarted
-	}
-	if s.srv != nil {
+	if s.srv.Load() != nil {
 		// Server was already built
-		return nil
+		return ErrServerAlreadyStarted
 	}
 	if s.Mux == nil {
 		return fmt.Errorf("building server without a mux: %w", ErrInvalidServer)
@@ -141,28 +136,22 @@ func (s *Server) buildServer() error {
 	}
 	if s.TLSConfig != nil {
 		cfg := s.TLSConfig.Clone()
+		if cfg == nil {
+			return fmt.Errorf("unable to clone TLS config: %w", ErrInvalidServer)
+		}
 		// Ensure TLSv1.2 version as server
 		cfg.MinVersion = tls.VersionTLS12
 		srv.TLSConfig = cfg
 	}
-	for _, f := range s.OnShudown {
+	for _, f := range s.OnShutdown {
 		srv.RegisterOnShutdown(f)
 	}
 	if s.DisableKeepAlives {
 		srv.SetKeepAlivesEnabled(false)
 	}
-	s.srv = srv
+	s.srv.Store(srv)
 
 	return nil
-}
-
-// Clone returns an unstarted deep copy of Server that can be re-configured and re-started.
-func (s *Server) Clone() *Server {
-	cln := *s
-	cln.started = false
-	cln.TLSConfig = s.TLSConfig.Clone()
-	cln.srv = nil
-	return &cln
 }
 
 // ListenAndServe is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServe
@@ -172,8 +161,7 @@ func (s *Server) ListenAndServe() error {
 	if err := s.buildServer(); err != nil {
 		return fmt.Errorf("unable to build server instance: %w", err)
 	}
-	s.started = true
-	return s.srv.ListenAndServe()
+	return s.srv.Load().ListenAndServe()
 }
 
 // ListenAndServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ListenAndServeTLS
@@ -183,8 +171,7 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
 	if err := s.buildServer(); err != nil {
 		return fmt.Errorf("unable to build server instance: %w", err)
 	}
-	s.started = true
-	return s.srv.ListenAndServeTLS(certFile, keyFile)
+	return s.srv.Load().ListenAndServeTLS(certFile, keyFile)
 }
 
 // Serve is a wrapper for https://golang.org/pkg/net/http/#Server.Serve
@@ -194,8 +181,7 @@ func (s *Server) Serve(l net.Listener) error {
 	if err := s.buildServer(); err != nil {
 		return fmt.Errorf("unable to build server instance: %w", err)
 	}
-	s.started = true
-	return s.srv.Serve(l)
+	return s.srv.Load().Serve(l)
 }
 
 // ServeTLS is a wrapper for https://golang.org/pkg/net/http/#Server.ServeTLS
@@ -205,27 +191,25 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	if err := s.buildServer(); err != nil {
 		return fmt.Errorf("unable to build server instance: %w", err)
 	}
-	s.started = true
-	return s.srv.ServeTLS(l, certFile, keyFile)
+	return s.srv.Load().ServeTLS(l, certFile, keyFile)
 }
 
 // Shutdown is a wrapper for https://golang.org/pkg/net/http/#Server.Shutdown
 //
 //nolint:wrapcheck
 func (s *Server) Shutdown(ctx context.Context) error {
-	if !s.started {
-		return fmt.Errorf("unbale to shutdown the server: %w", ErrServerIsNotStarted)
+	if s.srv.Load() == nil {
+		return fmt.Errorf("unable to shutdown the server: %w", ErrServerIsNotStarted)
 	}
-	s.srv.SetKeepAlivesEnabled(false)
-	return s.srv.Shutdown(ctx)
+	return s.srv.Load().Shutdown(ctx)
 }
 
 // Close is a wrapper for https://golang.org/pkg/net/http/#Server.Close
 //
 //nolint:wrapcheck
 func (s *Server) Close() error {
-	if !s.started {
-		return fmt.Errorf("unbale to close the server: %w", ErrServerIsNotStarted)
+	if s.srv.Load() == nil {
+		return fmt.Errorf("unable to close the server: %w", ErrServerIsNotStarted)
 	}
-	return s.srv.Close()
+	return s.srv.Load().Close()
 }

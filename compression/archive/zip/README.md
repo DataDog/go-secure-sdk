@@ -20,7 +20,7 @@ var (
 
 ## Functions
 
-### func [Create](create.go#L21)
+### func [Create](create.go#L17)
 
 `func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error`
 
@@ -28,7 +28,7 @@ Create an archive from given options to the given writer.
 
 ```golang
 // Create in-memory test filesystem.
-// This is used to override the default bazel behavior which creates symlinks
+// This is used to override the default bazel behaviour which creates symlinks
 // to testdata. The archive creation ignores symlinks by design which is
 // raising an error while using Bazel build.
 //
@@ -69,19 +69,19 @@ if err := Create(root, out,
  Output:
 
 ```
-00000000  50 4b 03 04 14 00 08 00  00 00 00 00 00 00 00 00  |PK..............|
+00000000  50 4b 03 04 14 00 08 00  00 00 00 00 21 8a 00 00  |PK..........!...|
 00000010  00 00 00 00 00 00 00 00  00 00 08 00 00 00 72 6f  |..............ro|
 00000020  6f 74 2e 74 78 74 72 6f  6f 74 20 66 69 6c 65 20  |ot.txtroot file |
 00000030  63 6f 6e 74 65 6e 74 50  4b 07 08 a0 78 c1 33 11  |contentPK...x.3.|
 00000040  00 00 00 11 00 00 00 50  4b 01 02 14 03 14 00 08  |.......PK.......|
-00000050  00 00 00 00 00 00 00 a0  78 c1 33 11 00 00 00 11  |........x.3.....|
+00000050  00 00 00 00 00 21 8a a0  78 c1 33 11 00 00 00 11  |.....!..x.3.....|
 00000060  00 00 00 08 00 00 00 00  00 00 00 00 00 01 00 00  |................|
 00000070  80 00 00 00 00 72 6f 6f  74 2e 74 78 74 50 4b 05  |.....root.txtPK.|
 00000080  06 00 00 00 00 01 00 01  00 36 00 00 00 47 00 00  |.........6...G..|
 00000090  00 00 00                                          |...|
 ```
 
-### func [Extract](extract.go#L24)
+### func [Extract](extract.go#L46)
 
 `func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error`
 
@@ -156,84 +156,108 @@ f 1/2/3/4/5/test.txt
 
 ## Types
 
-### type [FileInfoFilterFunc](options.go#L30)
+### type [ErrExpansionExplosion](extract.go#L18)
+
+`type ErrExpansionExplosion struct { ... }`
+
+ErrExpansionExplosion represents the error raised when a file has a suspicious
+expansion ratio.
+
+#### func (*ErrExpansionExplosion) [Error](extract.go#L25)
+
+`func (e *ErrExpansionExplosion) Error() string`
+
+#### func (*ErrExpansionExplosion) [Is](extract.go#L30)
+
+`func (e *ErrExpansionExplosion) Is(err error) bool`
+
+Is implements error comparison for errors.Is usages.
+
+### type [FileInfoFilterFunc](options.go#L28)
 
 `type FileInfoFilterFunc func(path string, fi fs.FileInfo) bool`
 
 FileInfoFilterFunc declares the function type used to take a boolean decision
 based on the path and the associated file information.
 
-### type [HeaderProcessorFunc](options.go#L33)
+### type [HeaderProcessorFunc](options.go#L31)
 
 `type HeaderProcessorFunc func(hdr *zip.FileHeader) *zip.FileHeader`
 
 HeaderProcessorFunc declares the function type used to pre-process ZIP item headers.
 
-#### func [ResetHeaderTimes](options.go#L106)
+#### func [ResetHeaderTimes](options.go#L112)
 
 `func ResetHeaderTimes() HeaderProcessorFunc`
 
 ResetHeaderTimes returns a header processor used to reset Zip header times.
 Useful to get deterministic output.
 
-### type [Option](options.go#L26)
+### type [Option](options.go#L24)
 
 `type Option func(*options)`
 
 Option declares operation functional option.
 
-#### func [WithCompressFilter](options.go#L74)
+#### func [WithCompressFilter](options.go#L80)
 
 `func WithCompressFilter(value FileInfoFilterFunc) Option`
 
 WithCompressFilter defines the function used to determine if an item should
 be compressed into the archive.
 
-#### func [WithCompressionLevel](options.go#L36)
+#### func [WithCompressionLevel](options.go#L34)
 
 `func WithCompressionLevel(value int) Option`
 
 WithCompressionLevel defines the compression level used during the compression.
 
-#### func [WithEmptyDirectories](options.go#L89)
+#### func [WithEmptyDirectories](options.go#L95)
 
 `func WithEmptyDirectories(value bool) Option`
 
 WithEmptyDirectories sets a flag to add directories during compression.
 
-#### func [WithExcludeFilter](options.go#L66)
+#### func [WithExcludeFilter](options.go#L72)
 
 `func WithExcludeFilter(value FileInfoFilterFunc) Option`
 
 WithExcludeFilter defines the function used to determine if an item should
 be excluded from the archive.
 
-#### func [WithHeaderRewritterFunc](options.go#L96)
+#### func [WithHeaderRewritterFunc](options.go#L102)
 
 `func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option`
 
 WithHeaderRewritterFunc sets the Tar item header rewritter interceptor.
 
-#### func [WithIncludeFilter](options.go#L58)
+#### func [WithIncludeFilter](options.go#L64)
 
 `func WithIncludeFilter(value FileInfoFilterFunc) Option`
 
 WithIncludeFilter defines the function used to determine if an item should
 be included in the archive.
 
-#### func [WithMaxEntryCount](options.go#L43)
+#### func [WithMaxEntryCount](options.go#L41)
 
 `func WithMaxEntryCount(value uint64) Option`
 
 WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 
-#### func [WithMaxFileSize](options.go#L50)
+#### func [WithMaxExplosionMagnitudeOrder](options.go#L56)
+
+`func WithMaxExplosionMagnitudeOrder(value uint64) Option`
+
+WithMaxExplosionMagnitudeOrder overrides the default maximum size explosion
+magnitude order.
+
+#### func [WithMaxFileSize](options.go#L48)
 
 `func WithMaxFileSize(value uint64) Option`
 
 WithMaxFileSize overrides the default maximum file size for compression.
 
-#### func [WithOverwriteFilter](options.go#L82)
+#### func [WithOverwriteFilter](options.go#L88)
 
 `func WithOverwriteFilter(value FileInfoFilterFunc) Option`
 

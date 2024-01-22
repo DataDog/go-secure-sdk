@@ -1,15 +1,15 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package provider
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 )
 
 func TestPublicKey_Can(t *testing.T) {
@@ -115,6 +115,30 @@ func TestPublicKey_AsJWK(t *testing.T) {
 		got, err := w.AsJWK()
 		require.NoError(t, err)
 		require.Equal(t, `{"use":"enc","kty":"OKP","crv":"Ed25519","x":"VYmdjj6A6GE5SPCGCfwhzb0ajYl5fYOKmp6hAUe2RGY"}`+"\n", got)
+	})
+}
+
+func TestPublicKey_AsCabin(t *testing.T) {
+	t.Parallel()
+
+	pub, _, err := ed25519.GenerateKey(strings.NewReader("00000-deterministic-seed-for-testing-purpose-only"))
+	require.NoError(t, err)
+
+	t.Run("exportable", func(t *testing.T) {
+		t.Parallel()
+
+		w := &defaultPublicKey{
+			alias:    KeyAlias("testing"),
+			key:      pub,
+			purposes: Purposes(SignaturePurpose, ExportableKey),
+		}
+
+		got, err := w.AsCabin([]byte("test-password-000"))
+		require.NoError(t, err)
+
+		k, err := keyutil.FromCabinPEM(bytes.NewReader(got), []byte("test-password-000"))
+		require.NoError(t, err)
+		require.Equal(t, pub, k)
 	})
 }
 

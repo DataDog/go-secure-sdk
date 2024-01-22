@@ -4,13 +4,13 @@ Package value provides security enhanced Go types to protect from value leaks.
 
 ## Functions
 
-### func [SetDefaultEncryptionKey](defaults.go#L71)
+### func [SetDefaultEncryptionKey](defaults.go#L68)
 
 `func SetDefaultEncryptionKey(key []byte) error`
 
 SetDefaultEncryptionKey sets the encryption key used for default value encryption.
 
-### func [SetDefaultTokenizationKey](defaults.go#L87)
+### func [SetDefaultTokenizationKey](defaults.go#L84)
 
 `func SetDefaultTokenizationKey(key []byte) error`
 
@@ -18,13 +18,13 @@ SetDefaultTokenizationKey sets the HMAC-SHA256 key used for default tokenization
 
 ## Types
 
-### type [Redacted](redacted_secret.go#L35)
+### type [Redacted](redacted_secret.go#L32)
 
 `type Redacted[T any] struct { ... }`
 
 Redacted describes a redacted value to prevnt its leak.
 
-#### func [AsRedacted](redacted_secret.go#L26)
+#### func [AsRedacted](redacted_secret.go#L23)
 
 `func AsRedacted[T any](value T) Redacted[T]`
 
@@ -45,61 +45,79 @@ password
 [redacted]
 ```
 
-#### func (Redacted[T]) [Format](redacted_secret.go#L71)
+#### func (Redacted[T]) [Format](redacted_secret.go#L68)
 
-`func (Redacted[T]) Format(f fmt.State, c rune)`
+`func (Redacted[T]) Format(f fmt.State, _ rune)`
 
 Format implements string formatter.
 Implements fmt.Formatter
 
-#### func (Redacted[T]) [GoString](redacted_secret.go#L65)
+#### func (Redacted[T]) [GoString](redacted_secret.go#L62)
 
 `func (Redacted[T]) GoString() string`
 
 GoString implements alternative string interface.
 Implements fmt.GoStringer
 
-#### func (Redacted[T]) [MarshalBinary](redacted_secret.go#L41)
+#### func (Redacted[T]) [MarshalBinary](redacted_secret.go#L38)
 
 `func (Redacted[T]) MarshalBinary() ([]byte, error)`
 
 MarshalBinary marshals the secreat as a redacted text.
 Implements encoding.BinaryMarshaler.
 
-#### func (Redacted[T]) [MarshalJSON](redacted_secret.go#L53)
+#### func (Redacted[T]) [MarshalJSON](redacted_secret.go#L50)
 
 `func (Redacted[T]) MarshalJSON() ([]byte, error)`
 
 MarshalJSON marshals the string as a redacted one.
 Implements json.Marshaler
 
-#### func (Redacted[T]) [MarshalText](redacted_secret.go#L47)
+#### func (Redacted[T]) [MarshalText](redacted_secret.go#L44)
 
 `func (Redacted[T]) MarshalText() ([]byte, error)`
 
 MarshalText marshals the secret as a redacted text.
 Implements encoding.TextMarshaler
 
-#### func (Redacted[T]) [String](redacted_secret.go#L59)
+#### func (Redacted[T]) [String](redacted_secret.go#L56)
 
 `func (Redacted[T]) String() string`
 
 String implements string interface.
 Implements fmt.Stringer
 
-#### func (*Redacted[T]) [Unwrap](redacted_secret.go#L78)
+#### func (*Redacted[T]) [Unwrap](redacted_secret.go#L75)
 
 `func (s *Redacted[T]) Unwrap() T`
 
 Unwrap returns the wrapped secret value.
 
-### type [Wrapped](wrapped_value.go#L44)
+### type [RedactedString](types.go#L11)
+
+`type RedactedString struct { ... }`
+
+RedactedString wraps a redactable string to offer unmarshalling feature.
+
+#### func [AsRedactedString](types.go#L4)
+
+`func AsRedactedString(in string) RedactedString`
+
+AsRedactedString wraps the given string value into a redacted value container.
+
+#### func (*RedactedString) [UnmarshalText](types.go#L16)
+
+`func (rs *RedactedString) UnmarshalText(text []byte) error`
+
+UnmarshalText implements encoding.TextUnmarshaler interface for RedactedString.
+
+### type [Wrapped](wrapped_value.go#L41)
 
 `type Wrapped[T any] struct { ... }`
 
 Wrapped describes sensitive string value.
 
-#### func [AsEncrypted](defaults.go#L51)
+#### func [AsEncrypted](defaults.go#L48)
 
 `func AsEncrypted[T any](v T) Wrapped[T]`
 
@@ -137,7 +155,7 @@ fmt.Println(string(out))
 
 ```
 
-#### func [AsToken](defaults.go#L34)
+#### func [AsToken](defaults.go#L31)
 
 `func AsToken[T any](v T) Wrapped[T]`
 
@@ -163,7 +181,7 @@ firstname.lastname@company.tld
 m9BAmfJ5duXmaIn2IKW1VuFP60ZlFFuJBTD1Ytp6eKQ
 ```
 
-#### func [AsWrapped](wrapped_value.go#L34)
+#### func [AsWrapped](wrapped_value.go#L31)
 
 `func AsWrapped[T any](value T, t transformer.Transformer) Wrapped[T]`
 
@@ -207,83 +225,83 @@ if err != nil {
 {"@timestamp":"2023-03-08T15:25:18.000000123Z","@level":"info","Message":{"principal":"MZDSYdGGrurTqN7sICc3x3da9cjUVanlupWMSLX9P1k","secret":"[redacted]"}}
 ```
 
-#### func (Wrapped[T]) [Format](wrapped_value.go#L177)
+#### func (Wrapped[T]) [Format](wrapped_value.go#L174)
 
 `func (s Wrapped[T]) Format(f fmt.State, c rune)`
 
 Format implements string formatter.
 Implements fmt.Formatter
 
-#### func (Wrapped[T]) [GoString](wrapped_value.go#L171)
+#### func (Wrapped[T]) [GoString](wrapped_value.go#L168)
 
 `func (s Wrapped[T]) GoString() string`
 
 GoString implements alternative string interface.
 Implements fmt.GoStringer
 
-#### func (Wrapped[T]) [MarshalBinary](wrapped_value.go#L51)
+#### func (Wrapped[T]) [MarshalBinary](wrapped_value.go#L48)
 
 `func (s Wrapped[T]) MarshalBinary() ([]byte, error)`
 
 MarshalBinary marshals the secreat as a encrypted byte array.
 Implements encoding.BinaryMarshaler.
 
-#### func (Wrapped[T]) [MarshalJSON](wrapped_value.go#L111)
+#### func (Wrapped[T]) [MarshalJSON](wrapped_value.go#L108)
 
 `func (s Wrapped[T]) MarshalJSON() ([]byte, error)`
 
 MarshalJSON marshals the string as a redacted one.
 Implements json.Marshaler
 
-#### func (Wrapped[T]) [MarshalText](wrapped_value.go#L86)
+#### func (Wrapped[T]) [MarshalText](wrapped_value.go#L83)
 
 `func (s Wrapped[T]) MarshalText() ([]byte, error)`
 
 MarshalText marshals the secret as a encrypted text.
 Implements encoding.TextMarshaler
 
-#### func (*Wrapped[T]) [Scan](wrapped_value.go#L151)
+#### func (*Wrapped[T]) [Scan](wrapped_value.go#L148)
 
 `func (s *Wrapped[T]) Scan(src interface{ ... }) error`
 
 Scan unmarshals a secret secret from a SQL record.
 Implements sql.Scanner.
 
-#### func (Wrapped[T]) [String](wrapped_value.go#L165)
+#### func (Wrapped[T]) [String](wrapped_value.go#L162)
 
 `func (s Wrapped[T]) String() string`
 
 String implements string interface.
 Implements xml.Marshaler
 
-#### func (*Wrapped[T]) [UnmarshalBinary](wrapped_value.go#L69)
+#### func (*Wrapped[T]) [UnmarshalBinary](wrapped_value.go#L66)
 
 `func (s *Wrapped[T]) UnmarshalBinary(in []byte) error`
 
 UnmarshalBinary unmarshals a sealed secret and rturnts the decrypted value.
 Implements encoding.BinaryUnmarshaler.
 
-#### func (*Wrapped[T]) [UnmarshalJSON](wrapped_value.go#L128)
+#### func (*Wrapped[T]) [UnmarshalJSON](wrapped_value.go#L125)
 
 `func (s *Wrapped[T]) UnmarshalJSON(in []byte) error`
 
 UnmarshalJSON unmarshals the secret from the encrypted value.
 Implements json.Marshaler
 
-#### func (*Wrapped[T]) [UnmarshalText](wrapped_value.go#L98)
+#### func (*Wrapped[T]) [UnmarshalText](wrapped_value.go#L95)
 
 `func (s *Wrapped[T]) UnmarshalText(in []byte) error`
 
 UnmarshalText unmarshals a sealed secret and rturnts the decrypted value.
 Implements encoding.TextUnmarshaler.
 
-#### func (*Wrapped[T]) [Unwrap](wrapped_value.go#L188)
+#### func (*Wrapped[T]) [Unwrap](wrapped_value.go#L185)
 
 `func (s *Wrapped[T]) Unwrap() T`
 
 Unwrap returns the wrapped secret value.
 
-#### func (Wrapped[T]) [Value](wrapped_value.go#L139)
+#### func (Wrapped[T]) [Value](wrapped_value.go#L136)
 
 `func (s Wrapped[T]) Value() (driver.Value, error)`
 

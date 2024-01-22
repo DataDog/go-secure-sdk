@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import (
@@ -9,18 +6,43 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math"
 	"path/filepath"
 
 	"github.com/DataDog/go-secure-sdk/ioutil"
 	"github.com/DataDog/go-secure-sdk/vfs"
 )
 
+// ErrExpansionExplosion represents the error raised when a file has a suspicious
+// expansion ratio.
+type ErrExpansionExplosion struct {
+	Filename             string
+	MagnitudeOrder       uint64
+	UncompressedFileSize uint64
+	CompressedFileSize   uint64
+}
+
+func (e *ErrExpansionExplosion) Error() string {
+	return fmt.Sprintf("suspicious filebomb identified %q (explosion magnitude order: %d; %d => %d)", e.Filename, e.MagnitudeOrder, e.CompressedFileSize, e.UncompressedFileSize)
+}
+
+// Is implements error comparison for errors.Is usages.
+func (e *ErrExpansionExplosion) Is(err error) bool {
+	other, ok := err.(*ErrExpansionExplosion)
+	if !ok {
+		return false
+	}
+
+	return other.Filename == e.Filename &&
+		other.MagnitudeOrder == e.MagnitudeOrder &&
+		other.CompressedFileSize == e.CompressedFileSize &&
+		other.UncompressedFileSize == e.UncompressedFileSize
+}
+
 // Extract ZIP content from the reader to the given outPath prefix.
 //
 // outPath must be controlled by the developer and verified before being used as
 // the extraction path.
-//
-//nolint:gocognit,gocyclo
 func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 	// Check arguments
 	if r == nil {
@@ -32,9 +54,10 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 
 	// Apply default options
 	dopts := &options{
-		MaxArchiveSize: defaultMaxArchiveSize,
-		MaxFileSize:    defaultMaxFileSize,
-		MaxEntryCount:  defaultMaxEntryCount,
+		MaxArchiveSize:             defaultMaxArchiveSize,
+		MaxFileSize:                defaultMaxFileSize,
+		MaxEntryCount:              defaultMaxEntryCount,
+		MaxExplosionMagnitudeOrder: defaultMaxExplosionMagnitudeOrder,
 	}
 	for _, o := range opts {
 		o(dopts)
@@ -54,11 +77,12 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 	// ZIP format reader
 	zipReader, err := zip.NewReader(r, int64(size))
 	if err != nil {
-		return fmt.Errorf("unable to initialize FIP reader: %w", err)
+		return fmt.Errorf("unable to initialize ZIP reader: %w", err)
 	}
 
 	// Ensure not too many files
-	if len(zipReader.File) > int(dopts.MaxEntryCount) {
+	archiveFileCount := len(zipReader.File)
+	if archiveFileCount > int(dopts.MaxEntryCount) {
 		return fmt.Errorf("the archive contains too many file entries: %w", ErrAbortedOperation)
 	}
 
@@ -114,6 +138,26 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 			fileReader, err := f.Open()
 			if err != nil {
 				return fmt.Errorf("unable to open compressed file %q: %w", f.Name, err)
+			}
+
+			// Enforce non-0 size to prevent artificial magnitude explosion.
+			if f.UncompressedSize64 > f.CompressedSize64 && size > 0 && archiveFileCount > 0 {
+				// Compute average archive level file expansion ratio
+				avgFileRatio := size / uint64(archiveFileCount)
+				expansionRatio := f.UncompressedSize64 / avgFileRatio
+				// Reduce expansionRatio as a magnitude order based on Log10 to get digits count.
+				// We start at 1 to prevent -Inf when expansionRatio is zero.
+				explosionScore := uint64(math.Ceil(math.Log10(float64(1 + expansionRatio))))
+
+				// Average expansion ratio use more than 3 base10 figures to be expressed (>999%)
+				if explosionScore > dopts.MaxExplosionMagnitudeOrder {
+					return &ErrExpansionExplosion{
+						Filename:             f.Name,
+						MagnitudeOrder:       explosionScore,
+						UncompressedFileSize: f.UncompressedSize64,
+						CompressedFileSize:   f.CompressedSize64,
+					}
+				}
 			}
 
 			// Create file

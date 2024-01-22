@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package randomness
 
 import (
@@ -97,6 +94,38 @@ func TestAlphabet(t *testing.T) {
 		assert.True(t, re.MatchString(a))
 		assert.NoError(t, err)
 		b, err := Alphabet(l)
+		assert.True(t, re.MatchString(b))
+		assert.NoError(t, err)
+		// Most of the time
+		assert.NotEqual(t, a, b)
+	}
+}
+
+func TestVerificationCode(t *testing.T) {
+	t.Parallel()
+	re := regexp.MustCompilePOSIX(`^[BCDFGHJKLMNPQRSTVWXYZ]+$`)
+	lengths := []int{4, 8, 16, 32}
+	for _, l := range lengths {
+		a, err := VerificationCode(l)
+		assert.True(t, re.MatchString(a))
+		assert.NoError(t, err)
+		b, err := VerificationCode(l)
+		assert.True(t, re.MatchString(b))
+		assert.NoError(t, err)
+		// Most of the time
+		assert.NotEqual(t, a, b)
+	}
+}
+
+func TestNumber(t *testing.T) {
+	t.Parallel()
+	re := regexp.MustCompilePOSIX(`^[0-9]+$`)
+	lengths := []int{4, 8, 16, 32}
+	for _, l := range lengths {
+		a, err := Number(l)
+		assert.True(t, re.MatchString(a))
+		assert.NoError(t, err)
+		b, err := Number(l)
 		assert.True(t, re.MatchString(b))
 		assert.NoError(t, err)
 		// Most of the time

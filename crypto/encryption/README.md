@@ -13,7 +13,7 @@ var ErrNoMatchingKey = errors.New("no matching key")
 
 ## Functions
 
-### func [Open](operations.go#L22)
+### func [Open](operations.go#L19)
 
 `func Open(keys [][]byte, ciphertext []byte, context ...[]byte) ([]byte, error)`
 
@@ -61,7 +61,18 @@ if err != nil {
 {"state":"gInhnZvpFdKJ2pg7gwPeVuKFZJMNUNNo"}
 ```
 
-### func [RotateKey](operations.go#L68)
+### func [ParseSecretCabin](cabin.go#L65)
+
+`func ParseSecretCabin(data, password []byte) (*memguard.LockedBuffer, error)`
+
+ParseSecretCabin returns the secret value encoded using dog-cabin envelope.
+If an incorrect password is detected an x509.IncorrectPasswordError is
+returned.
+
+Datadog cabin keys are encrypted under a password using scrypt as a KDF and
+use the appropriate encryption based on the environment settings.
+
+### func [RotateKey](operations.go#L65)
 
 `func RotateKey(oldkeys [][]byte, newkey, ciphertext []byte, context ...[]byte) (newciphertext []byte, err error)`
 
@@ -104,15 +115,22 @@ if err != nil {
 {"state":"gInhnZvpFdKJ2pg7gwPeVuKFZJMNUNNo"}
 ```
 
+### func [SealSecretCabin](cabin.go#L111)
+
+`func SealSecretCabin(w io.Writer, secret *memguard.LockedBuffer, password []byte) error`
+
+SealSecretCabin seals the input data with the given password and wrties the
+envelope to the writer.
+
 ## Types
 
-### type [ChunkedAEAD](api.go#L67)
+### type [ChunkedAEAD](api.go#L65)
 
 `type ChunkedAEAD interface { ... }`
 
 ChunkedAEAD represents all encryption/decryption operations for input stream.
 
-#### func [Chunked](chunk.go#L18)
+#### func [Chunked](chunk.go#L15)
 
 `func Chunked(key []byte) (ChunkedAEAD, error)`
 
@@ -161,25 +179,25 @@ wg.Wait()
 13985326
 ```
 
-#### func [ChunkedWithMode](chunk.go#L25)
+#### func [ChunkedWithMode](chunk.go#L22)
 
 `func ChunkedWithMode(mode Mode, key []byte) (ChunkedAEAD, error)`
 
 ChunkedWithMode represents value byte array encryption.
 
-### type [ChunkedDecryptor](api.go#L58)
+### type [ChunkedDecryptor](api.go#L56)
 
 `type ChunkedDecryptor interface { ... }`
 
-ChunkedDecryptor represents chunked decryption operations.
+ChunkDecryptor represents chunked decryption operations.
 
-### type [ChunkedEncryptor](api.go#L49)
+### type [ChunkedEncryptor](api.go#L47)
 
 `type ChunkedEncryptor interface { ... }`
 
-ChunkedEncryptor represents chunked encryption operations.
+ChunkEncryptor represents chunked encryption operations.
 
-### type [Mode](api.go#L9)
+### type [Mode](api.go#L6)
 
 `type Mode uint`
 
@@ -189,6 +207,7 @@ Mode represents encryption mode available.
 
 ```golang
 const (
+    // Keep 0 for automatic detection (TODO)
     // FIPS mode uses FIPS compliant encryption ciphersuites.
     // D1 => HKDF-SHA256_AES256-CTR_HMAC-SHA256
     FIPS Mode = iota + 1
@@ -198,13 +217,13 @@ const (
 )
 ```
 
-### type [ValueAEAD](api.go#L42)
+### type [ValueAEAD](api.go#L40)
 
 `type ValueAEAD interface { ... }`
 
 ValueAEAD represents all encryption/decryption operations for a finite byte array.
 
-#### func [Convergent](convergent.go#L14)
+#### func [Convergent](convergent.go#L11)
 
 `func Convergent(key []byte) (ValueAEAD, error)`
 
@@ -236,7 +255,7 @@ if err != nil {
 1dtoaXXECDRvszKGTnXWpvipYTUgS36vKaWDSkcJrYcgF3M9Rh5bM2tPaBC33Ws/X9gGAqfGkLsU4L0
 ```
 
-#### func [Value](value.go#L18)
+#### func [Value](value.go#L15)
 
 `func Value(key []byte) (ValueAEAD, error)`
 
@@ -282,7 +301,7 @@ if err != nil {
 {"state":"gInhnZvpFdKJ2pg7gwPeVuKFZJMNUNNo"}
 ```
 
-#### func [ValueWithMode](value.go#L27)
+#### func [ValueWithMode](value.go#L24)
 
 `func ValueWithMode(mode Mode, key []byte) (ValueAEAD, error)`
 
@@ -320,15 +339,19 @@ if err != nil {
 {"state":"gInhnZvpFdKJ2pg7gwPeVuKFZJMNUNNo"}
 ```
 
-### type [ValueDecryptor](api.go#L33)
+### type [ValueDecryptor](api.go#L31)
 
 `type ValueDecryptor interface { ... }`
 
 ValueDecryptor represents finite byte array decryption operations.
 
-### type [ValueEncryptor](api.go#L24)
+### type [ValueEncryptor](api.go#L22)
 
 `type ValueEncryptor interface { ... }`
 
 ValueEncryptor represents finite byte array encryption operations.
+
+## Sub Packages
+
+* [hpke](./hpke): Package hpke provides RFC9180 hybrid public key encryption features.
 

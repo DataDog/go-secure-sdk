@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package atomic
 
 import (
@@ -9,10 +6,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
-
-	"github.com/DataDog/go-secure-sdk/log"
 )
 
 // WriteFile atomically replace the file content of the filename target by the
@@ -34,7 +30,7 @@ func WriteFile(filename string, r io.Reader) (err error) {
 		// Ensure that the temporary file is removed in all cases.
 		if err := os.Remove(f.Name()); err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
-				log.Error(err).Messagef("unable to remove temporary file %q", f.Name())
+				slog.Error("unable to remove temporary file", "err", err, "file", f.Name())
 			}
 		}
 	}()
@@ -42,7 +38,7 @@ func WriteFile(filename string, r io.Reader) (err error) {
 		// Close the temporary file
 		if err := closer.Close(); err != nil {
 			if !errors.Is(err, fs.ErrClosed) {
-				log.Error(err).Message("unable to successfully close the file handler")
+				slog.Error("unable to successfully close the file handler", "err", err, "file", f.Name())
 			}
 		}
 	}(f)

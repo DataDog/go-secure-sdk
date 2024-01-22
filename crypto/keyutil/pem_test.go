@@ -1,17 +1,18 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package keyutil
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 var (
@@ -45,6 +46,10 @@ xaR3dQJ+957xphpjxHBb22mav2V5Ei+MuXIRWxgIrIO25SsdI0KfIoBvziEGdCK8
 KbB04TjSYqDic3Kjks2mXBwLj/Z5/gtw1JZWeGfDUeIBihGGjCcNvpF0nWc7rAz8
 v3EkmK5exXDRb//5YIOEN4M=
 -----END PRIVATE KEY-----`
+
+	rsaPublicKeyPEM = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApBxWZCOSmFLtd+6kkn9c\nvkNoe+dm10cAl6UzldKsSE+4Xfu06zgyiVhaao2Sw0YD/jUSyZtl1gYlyAH8aaNK\ne4b9s3SEqBrPQbYgqQT30BpvpLZQecURLAUsWDqG2jE0LkRMcWiQN10sDYBhZT9r\ntDeU+t/CoOjIViONhHcC80qt/KB9FBRwNNqB4AUE/LhyEBmg3ViHI6YrxBOhsqY3\nv5+lh07TXexG6HMqZyWjpezqcf4keYA0YU/uGMxh9VBZZSASI/rw4I69qcWhAOTx\nkeXthrBq7U5q9avboBX5xfLut+BYRMxs2ZFnVnzRR4Z+NhQ4AIyXK03RsJ6HVMDP\nuQIDAQAB\n-----END PUBLIC KEY-----\n"
+
+	rsaKeyCabinPEM = "-----BEGIN ENCRYPTED CABIN PRIVATE KEY-----\neyJrZGYiOnsibmFtZSI6InNjcnlwdCIsInZlcnNpb24iOjEsInNhbHQiOiJ3WUtH\nOUtKR0RlQnE4MkZibEgwbzNRPT0ifSwiY2lwaGVyIjp7Im5hbWUiOiJkYXRhZG9n\nL2QyIn0sImNpcGhlcnRleHQiOiIwbjVMVXV2aEZGaG5kb1cvR2J6OGRqenAzWjdX\nN0h5UXNyMWJoOUFmRkoraGxLcXJYWnVTMFI2RDB6NDZxeXRBVGVITjY4T1ZtU1d1\nTUp2b1E3MUhCUytVNWluWGhIeDllMEI1aGkzY1BZWVBDK2VCT0o0TkwyS3RvdFh3\ncUg1RlAwRm9UckNNcDNtdG1vZlJOQ25KdHhCZzhVa3RtcTByc2k1ZDlxendsN2RP\nZmlmb3p0M0Y1MHRScWMrQXowaDJiNW9xRTZQcDBzZUQ3bUQ1T3A1M0NVQlQzUDEr\nWWJNTlRsZDhJQjB2M0Y4d0JNSkM1aTlzQno4OUVIaTFzUU50NWFEY20yeHMwMUIr\nb0syaTNkOVFyOXhSTmozUUExeWgxbzhJSzdNY2VHcm4vRnhwSWJ1d2dFb1VQa2Fu\nUms2RGhrYjhRQ3piajR4WTRIYUlkajFRMWgyYnk3UXVKeGV4YTN2RjBLalhzeFR2\nN1lTZStUV0NldGdVQUNXK2JhZlVXQ2V0dHhBK3lMRU9YdzFlZ016ZU9XTXJ0QVNi\nUkZNNzhRZWZENmlKYnBZYlRUOHBIcFdPckVYK2tETVZmUk5uRzM4VzMrNHlJUkRk\nK2MwV2dZQVdxL2REM1prU2FMQktsSVpUU1ZDSDlYVTR4eUlISXJGeTZKdTBaNVE1\nYkRhVWswQWtVR1hxdi9NN2VxckZ1U2xTbmFNY3lZQ3cyMUFmczB1ZVR5Mm52MldM\nOWptb2FETVQ5SFZxeU93UXd2OElpSnFub2krTUNmbHhmbHc2MDNrNFNORWpKVUxn\nMkFTOVpmU21BaG1Ld3A1T1pmMlNtSnQ0THMyZ0NidEQyVTdBTFJ0SndkNjI4dnY1\nQUNOZzV1dE1RN0ZKdGpLREFnNFRkYmVuMkdjUGttNGhXU2txUXRLbDBVdHY0d29s\nOU03cjdmZjE3Q2FNc0FSRytHamxXem5lN1R0cVViVlRZWVl6RzVZVThxbVRJZm1k\nWlU2L1ArK2djQnJrRU5Pb3orVDBCK0RIRGhQb3BSdlVVYy9qRlB1ZmtDUitwTTJV\nMjl5eWFtYXVwYkwrRjh0cW55N2hjay91SDB0NktmOG4vWnZCa3FhTnVWQ3BxWGFW\nbU1IRE9MTExKV29PQmk4ODRtaHZ6a0RkZzJZZUVORVpBbWpXQXlCR2gyT0VveDNu\ncGdRcDFIQ0VhbEpMaHA2b0tIL0xWTzkyc1R3ZjBnUzkxcnROV2JCK05sbCtBSS9I\nU042V2M1dU1KV1VqNzdhUG9oSjRaZGJ3NkhQMmhaMFl2QXEyMXVvZHpzV2dUTklV\nMXVZUVp5Y2lmMVlkMTBQKzZtdTU1MmJQVlFkMjU1R295djMybklCSlBIZ1ZhVWZU\neG91cG44UTlJaENkZjVLbmJkcm9aY2laQTRqRHBJNWhTckwrdDd4NnFVVTlxcnJt\nem5rY3BNYmJlVGxZdW9YeXJpN2VRdGhFU1FBM1BVZ0EwUk9DWEhIR01uRk9sNWMy\nejFGNmRDUDlPamIzY240RzNNTXFUNlI3NGVIeTlqcHZTcUhlc0VYRVVNLzVjVFhx\nN0lYalYrdnV2NFZmTU81ajIzMmhKTDhNK0RLOUJUY0p2MlVseVI5TWY4QUFJVkYr\nZTNKTmhJaXdRYXY4OWFQUnFiUmxYdUo4MEhHdkVWWlE4NEVMUXJHR05iek1EQXg2\nMXlHc3dNaXBLVnJMa3pBVnFYZThrc0hQTmlYVEgrV1FZQ2x3Nm4raERQcXdKb1F4\neFg4a3QyUFBjeTh4R3lHaW0zQld5QUpwNjZBSXRJVzZSQWtNam1ldm9LY3dQT1lp\nMFN2VnZwUkthdjZFbEZXZzF5MFlNaEVDWExGR2hzNVc4UTczMWZjSThheTdZanp1\ndlFTNG8wUUJJMS9VRGthQzFITk80aE5ZaEMzSFEzdW0vN3pFRmZqN3c1UFFUVnNs\ncldDYU94bUpUbVJ3TWtlT3JZQ3VWOXh2OVR4aUEzSElLVUMrd3FadVppMTlBRVpN\na1dyUDNmWloyU012WHRhVFYvQkpTWXFnMVpQa3ZKNkNOeVFVRWVIZVZFcGhTWGlN\nejBnaEN4MDl2bHZyUktyZ1JSYXpLbi9WdkZqc2xhdkpBZGJyd1J3SnFMOVRQY0hp\naWZQbzMzMC9Fb214Zk9JSmc1OTQvd2RuZkxlcjZFNS82V043VGF3QkUybTV0Umd0\nSzNDd2ZBbC9QUlVMdENZM2MveUQ1N0lDUHI4K1d5cmxEV2t3QWowPSJ9Cg==\n-----END ENCRYPTED CABIN PRIVATE KEY-----\n"
 
 	ecKeyPEM = `-----BEGIN PRIVATE KEY-----
 MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCDP4oetAITW/Ow3qtTH
@@ -135,5 +140,250 @@ func TestToDERBytes(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []byte{0x30, 0x2e, 0x2, 0x1, 0x0, 0x30, 0x5, 0x6, 0x3, 0x2b, 0x65, 0x70, 0x4, 0x22, 0x4, 0x20, 0x6, 0x8, 0xb0, 0xa2, 0xf4, 0xc6, 0x44, 0xe4, 0x1, 0x70, 0xe1, 0x50, 0xde, 0x9e, 0xe, 0x17, 0xaa, 0x38, 0x31, 0xe, 0x1b, 0x21, 0x59, 0xd3, 0x88, 0xec, 0x80, 0x53, 0x42, 0x17, 0x16, 0x5f}, rawPk)
 		require.Equal(t, "PRIVATE KEY", b)
+	})
+}
+
+func TestToPEM(t *testing.T) {
+	t.Parallel()
+
+	t.Run("rsa", func(t *testing.T) {
+		t.Parallel()
+
+		block, _ := pem.Decode([]byte(rsaKeyPEM))
+		pkRaw, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		require.NoError(t, err)
+		require.IsType(t, &rsa.PrivateKey{}, pkRaw)
+		pk, _ := pkRaw.(*rsa.PrivateKey)
+
+		var out bytes.Buffer
+		err = ToPEM(&out, pk.Public())
+		require.NoError(t, err)
+		require.Equal(t, "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApBxWZCOSmFLtd+6kkn9c\nvkNoe+dm10cAl6UzldKsSE+4Xfu06zgyiVhaao2Sw0YD/jUSyZtl1gYlyAH8aaNK\ne4b9s3SEqBrPQbYgqQT30BpvpLZQecURLAUsWDqG2jE0LkRMcWiQN10sDYBhZT9r\ntDeU+t/CoOjIViONhHcC80qt/KB9FBRwNNqB4AUE/LhyEBmg3ViHI6YrxBOhsqY3\nv5+lh07TXexG6HMqZyWjpezqcf4keYA0YU/uGMxh9VBZZSASI/rw4I69qcWhAOTx\nkeXthrBq7U5q9avboBX5xfLut+BYRMxs2ZFnVnzRR4Z+NhQ4AIyXK03RsJ6HVMDP\nuQIDAQAB\n-----END PUBLIC KEY-----\n", out.String())
+	})
+
+	t.Run("ec", func(t *testing.T) {
+		t.Parallel()
+
+		block, _ := pem.Decode([]byte(ecKeyPEM))
+		pkRaw, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		require.NoError(t, err)
+		require.IsType(t, &ecdsa.PrivateKey{}, pkRaw)
+		pk, _ := pkRaw.(*ecdsa.PrivateKey)
+
+		var out bytes.Buffer
+		err = ToPEM(&out, pk.Public())
+		require.NoError(t, err)
+		require.Equal(t, "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMDxSnxytEklf6nj0DTIZZXa7ZrTI\n9HdbFi6I4CpjqMFqyn4KAmt63tGLXElEckkfvhmcA8/KHcUhprLzvHBdwA==\n-----END PUBLIC KEY-----\n", out.String())
+	})
+
+	t.Run("ed25519", func(t *testing.T) {
+		t.Parallel()
+
+		block, _ := pem.Decode([]byte(ed25519KeyPEM))
+		pkRaw, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		require.NoError(t, err)
+		require.IsType(t, ed25519.PrivateKey{}, pkRaw)
+		pk, _ := pkRaw.(ed25519.PrivateKey)
+
+		var out bytes.Buffer
+		err = ToPEM(&out, pk.Public())
+		require.NoError(t, err)
+		require.Equal(t, "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mcwgf2DrWLR3mQ6l2d59bGU6qUStwQrln2+rKlKxoA=\n-----END PUBLIC KEY-----\n", out.String())
+	})
+}
+
+func TestFromPEM(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil reader", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := FromPEM(nil)
+		require.Error(t, err)
+	})
+
+	t.Run("too large content", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := FromPEM(randomness.NewReader(1))
+		require.Error(t, err)
+	})
+
+	t.Run("invalid PEM block", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN INVALID-----`)
+		out, err := FromPEM(in)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("invalid PEM type", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN INVALID-----`)
+		out, err := FromPEM(in)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("invalid PEM content", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN PUBLIC KEY-----`)
+		out, err := FromPEM(in)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("invalid PEM block type", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN XXX KEY-----\n\n-----END XXX KEY-----\n`)
+		out, err := FromPEM(in)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("private key", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(rsaKeyPEM)
+		out, err := FromPEM(in)
+		require.NoError(t, err)
+		require.IsType(t, &rsa.PrivateKey{}, out)
+	})
+
+	t.Run("public key", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(rsaPublicKeyPEM)
+		out, err := FromPEM(in)
+		require.NoError(t, err)
+		require.IsType(t, &rsa.PublicKey{}, out)
+	})
+}
+
+func TestToCabinPEM(t *testing.T) {
+	t.Parallel()
+
+	password := []byte("0123456789012345")
+	block, _ := pem.Decode([]byte(rsaKeyPEM))
+	pkRaw, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	require.NoError(t, err)
+	require.IsType(t, &rsa.PrivateKey{}, pkRaw)
+	pk, _ := pkRaw.(*rsa.PrivateKey)
+
+	t.Run("nil writer", func(t *testing.T) {
+		t.Parallel()
+
+		err := ToCabinPEM(nil, pk, password)
+		require.Error(t, err)
+	})
+
+	t.Run("nil key", func(t *testing.T) {
+		t.Parallel()
+
+		var out bytes.Buffer
+		err := ToCabinPEM(&out, pk, nil)
+		require.Error(t, err)
+	})
+
+	t.Run("invalid password", func(t *testing.T) {
+		t.Parallel()
+
+		var out bytes.Buffer
+		err = ToCabinPEM(&out, pk, []byte("0000000000000000"))
+		require.NoError(t, err)
+
+		k, err := FromCabinPEM(&out, password)
+		require.Error(t, err)
+		require.Nil(t, k)
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		t.Parallel()
+
+		var out bytes.Buffer
+		err = ToCabinPEM(&out, pk, password)
+		require.NoError(t, err)
+
+		k, err := FromCabinPEM(&out, password)
+		require.NoError(t, err)
+		require.Equal(t, pk, k)
+	})
+}
+
+func TestFromCabinPEM(t *testing.T) {
+	t.Parallel()
+
+	password := []byte("0123456789012345")
+
+	t.Run("nil reader", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := FromCabinPEM(nil, password)
+		require.Error(t, err)
+	})
+
+	t.Run("too large content", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := FromCabinPEM(randomness.NewReader(1), password)
+		require.Error(t, err)
+	})
+
+	t.Run("invalid PEM block", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN INVALID-----`)
+		out, err := FromCabinPEM(in, password)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("invalid PEM content", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN PUBLIC KEY-----`)
+		out, err := FromCabinPEM(in, password)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("invalid PEM block type", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(`-----BEGIN XXX KEY-----\n\n-----END XXX KEY-----\n`)
+		out, err := FromCabinPEM(in, password)
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("password too short", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(rsaKeyCabinPEM)
+		out, err := FromCabinPEM(in, []byte(""))
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("bad password", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(rsaKeyCabinPEM)
+		out, err := FromCabinPEM(in, []byte("0000000000000000"))
+		require.Error(t, err)
+		require.Nil(t, out)
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		t.Parallel()
+
+		in := strings.NewReader(rsaKeyCabinPEM)
+		out, err := FromCabinPEM(in, password)
+		require.NoError(t, err)
+		require.IsType(t, &rsa.PrivateKey{}, out)
 	})
 }

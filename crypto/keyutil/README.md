@@ -7,27 +7,83 @@ This package follows the recommendations provided by the SDG SKB
 
 ## Functions
 
-### func [ExtractKey](generate.go#L146)
+### func [AttachCertificateToJWK](jwk.go#L47)
+
+`func AttachCertificateToJWK(jwk *jose.JSONWebKey, cert *x509.Certificate) error`
+
+AttachCertificateToJWK attaches the given certificate to the JWK.
+
+### func [ExtractKey](generate.go#L158)
 
 `func ExtractKey(in any) (any, error)`
 
 ExtractKey returns the given public or private key or extracts the public key
 if a x509.Certificate or x509.CertificateRequest is given.
 
-### func [FromEncryptedJWK](jwk.go#L121)
+### func [FromCabinPEM](pem.go#L194)
+
+`func FromCabinPEM(r io.Reader, password []byte) (any, error)`
+
+FromCabinPEM opens and decrypt a cryptographic key packaged in a secret cabin.
+
+A private key will be deserialized using PKCS8.
+Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, *ecdh.PrivateKey,
+ed25519.PrivateKey
+
+A public key will be deserialized using PKIX.
+Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
+ed25519.PublicKey
+
+### func [FromEncryptedJWK](jwk.go#L185)
 
 `func FromEncryptedJWK(r io.Reader, secret []byte) (*jose.JSONWebKey, error)`
 
 FromEncryptedJWK unwraps the JWK encoded in a JWE container encrypted using
 AES256GCM with key derivation based on PBES2_HS512_A256KW.
 
-### func [FromJWK](jwk.go#L90)
+```golang
+encryptedJWK := "eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJjdHkiOiJhcHBsaWNhdGlvbi9qd2sranNvbiIsImVuYyI6IkEyNTZHQ00iLCJwMmMiOjEyMDAwMCwicDJzIjoiQ2FlVno0dExSZEtKSEozSkFxakdkZyJ9.C_2fwhcpvnmXENVtV_h-ukQ28Yd9-j693MUQURcgPllUCnHO3-lBqw.oV4ZAjaUMr8Su5o7.1aT8dC2WIj8Wq1QlGetvIyIEEvTz79SXjszTvV0WRMfrJEu4VjWjXYjiMmajNaYsqAXWf5C6-P3-Hs8lR-vKZtHqNgafWQKOZM8nJkMkiwQOcMl_Q4EHV6ni7Ss4ZfRGQ_o8R2ONP9Y88_8tFppLMro1xGNQp1pBem_VHPn8787hLVHZHAfTV--rwvyJ3aRe_RePBZ4RSpjf5inGJPDkEOcAVa043iAF75HGwxu3wLkVyC3wKj4iEIyz-uv3OOG-bKkWci7BrCtPGcdSGNVFRWhoc-aJwgaW6NhdZRRvpviskg8fXg.rbwTiWoeXVMAQ5vMIuCUOQ"
+
+// Pack the private key as JWK
+jwk, err := FromEncryptedJWK(strings.NewReader(encryptedJWK), []byte("very-secret-password"))
+if err != nil {
+    panic(err)
+}
+
+// Encode the JWK object as JSON
+var out bytes.Buffer
+if err := json.NewEncoder(&out).Encode(&jwk); err != nil {
+    panic(err)
+}
+```
+
+ Output:
+
+```
+{"kty":"EC","kid":"GQGzLJsjUVoKfbK5It-RQkmcJ7zSjPNHDre2htiQKjA","crv":"P-256","x":"4UldbrAX0tKLFvXxQ_er33af7vkmyn8B7K0WE_AuBWM","y":"VxV_08mpjH-jDu46Rl8khkeHu9luR-a9d6jZbLhtL-w","d":"E3IjbKFj-q0Q76lXxyEBG1x-bHuFK4NBTw2DzsvHuig"}
+```
+
+### func [FromJWK](jwk.go#L154)
 
 `func FromJWK(r io.Reader) (*jose.JSONWebKey, error)`
 
 FromJWK tries to decode the given reader content as JWK.
 
-### func [GenerateDefaultKeyPair](generate.go#L53)
+### func [FromPEM](pem.go#L144)
+
+`func FromPEM(r io.Reader) (any, error)`
+
+FromPEM opens a cryptographic key packaged in a PEM block.
+
+A private key will be deserialized using PKCS8.
+Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, *ecdh.PrivateKey,
+ed25519.PrivateKey
+
+A public key will be deserialized using PKIX.
+Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
+ed25519.PublicKey
+
+### func [GenerateDefaultKeyPair](generate.go#L50)
 
 `func GenerateDefaultKeyPair() (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -38,7 +94,7 @@ FIPS Mode *enabled* => EC
 
 FIPS Mode *disabled* => OKP (Ed25519)
 
-### func [GenerateKeyPair](generate.go#L63)
+### func [GenerateKeyPair](generate.go#L60)
 
 `func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -55,7 +111,7 @@ if err != nil {
 
 ```
 
-### func [GenerateKeyPairWithRand](generate.go#L77)
+### func [GenerateKeyPairWithRand](generate.go#L74)
 
 `func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -65,19 +121,19 @@ and allow a custom randsource to be used.
 FYI, RSA key generation Go implementation can't be deterministic by design.
 [https://github.com/golang/go/issues/38548](https://github.com/golang/go/issues/38548)
 
-### func [IsUsable](support.go#L17)
+### func [IsUsable](support.go#L14)
 
 `func IsUsable(key any) error`
 
 IsUsable returns an error if the given key as environmental restrictions.
 
-### func [PublicKey](generate.go#L119)
+### func [PublicKey](generate.go#L116)
 
 `func PublicKey(priv any) (crypto.PublicKey, error)`
 
 PublicKey extracts a public key from a private key.
 
-### func [PublicKeyFingerprint](fingerprint.go#L27)
+### func [PublicKeyFingerprint](fingerprint.go#L24)
 
 `func PublicKeyFingerprint(key any) ([]byte, error)`
 
@@ -91,9 +147,15 @@ the ASN.1 serialized and compute the SHA256 of the SubjectPublicKey content.
 ```golang
 // Decode certificate
 b, _ := pem.Decode(serverCertPEM)
+if b == nil {
+    panic("invalid PEM")
+}
 cert, err := x509.ParseCertificate(b.Bytes)
 if err != nil {
     panic(err)
+}
+if cert == nil {
+    panic("invalid certificate")
 }
 
 out, err := PublicKeyFingerprint(cert)
@@ -108,7 +170,21 @@ if err != nil {
 9351dda87a49db2102aef97dec41a58bd6df9245610c87744b39a0ef3d95a060
 ```
 
-### func [ToDERBytes](pem.go#L23)
+### func [ToCabinPEM](pem.go#L106)
+
+`func ToCabinPEM(w io.Writer, key any, password []byte) error`
+
+ToCabinPEM encrypts the given key with the given password in a secret cabin.
+
+A private key will be serialized using PKCS8.
+Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, *ecdh.PrivateKey,
+ed25519.PrivateKey
+
+A public key will be serialized using PKIX.
+Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
+ed25519.PublicKey
+
+### func [ToDERBytes](pem.go#L34)
 
 `func ToDERBytes(key any) (string, []byte, error)`
 
@@ -116,10 +192,12 @@ ToDERBytes encodes the given crypto key as a byte array in ASN.1 DER Form.
 It returns the PEM block type as string, and the encoded key.
 
 A private key will be serialized using PKCS8.
-Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey
+Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, *ecdh.PrivateKey,
+ed25519.PrivateKey
 
 A public key will be serialized using PKIX.
-Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey
+Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
+ed25519.PublicKey
 
 ```golang
 masterPassword := []byte("5gLJpXpXvOUh2gr5lb10zeTwgKWIL0hy0rDPg8B1ncQJ155jPYU7ajrZQPH9HDi")
@@ -180,7 +258,7 @@ MUgZWo5cWkobWMrm7sWOPO5OpJCzva40zg5KV1+KYDb7B/OTCD2px1y4EQ==
 -----END PUBLIC KEY-----
 ```
 
-### func [ToEncryptedJWK](jwk.go#L48)
+### func [ToEncryptedJWK](jwk.go#L112)
 
 `func ToEncryptedJWK(key *jose.JSONWebKey, secret []byte) (string, error)`
 
@@ -245,15 +323,41 @@ fmt.Printf("%s", out.String())
 
 ```
 
-### func [VerifyPair](generate.go#L172)
+### func [ToPEM](pem.go#L74)
+
+`func ToPEM(w io.Writer, key any) error`
+
+ToPEM encodes the given crypto key as a PEM block.
+
+A private key will be serialized using PKCS8.
+Supported private types: *rsa.PrivateKey, *ecdsa.PrivateKey, *ecdh.PrivateKey,
+ed25519.PrivateKey
+
+A public key will be serialized using PKIX.
+Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
+ed25519.PublicKey
+
+### func [ToPublicJWKS](jwk.go#L82)
+
+`func ToPublicJWKS(keys ...crypto.PublicKey) (*jose.JSONWebKeySet, error)`
+
+ToPublicJWKS encodes the giev keyset to a JSONWebKeySet.
+
+### func [VerifyPair](generate.go#L184)
 
 `func VerifyPair(pubkey crypto.PublicKey, key crypto.PrivateKey) error`
 
 VerifyPair that the public key matches the given private key.
 
+### func [VerifyPublicKey](generate.go#L217)
+
+`func VerifyPublicKey(input any, key crypto.PublicKey) error`
+
+VerifyPublicKey verifies that the given public key matches the given input.
+
 ## Types
 
-### type [KeyType](generate.go#L35)
+### type [KeyType](generate.go#L32)
 
 `type KeyType uint`
 

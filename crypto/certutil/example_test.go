@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package certutil
 
 import (
@@ -12,6 +9,9 @@ import (
 func ExampleFingerprint() {
 	// Decode certificate
 	b, _ := pem.Decode(serverCertPEM)
+	if b == nil {
+		panic("invalid PEM")
+	}
 	cert, err := x509.ParseCertificate(b.Bytes)
 	if err != nil {
 		panic(err)

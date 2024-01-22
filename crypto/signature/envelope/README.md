@@ -28,7 +28,7 @@ var ErrInvalidEnvelope = errors.New("invalid envelope")
 
 ## Functions
 
-### func [VerifyAndUnwrap](static.go#L75)
+### func [VerifyAndUnwrap](static.go#L72)
 
 `func VerifyAndUnwrap(e *Envelope, verifier signature.Verifier) ([]byte, error)`
 
@@ -76,13 +76,13 @@ if err != nil {
 
 ## Types
 
-### type [Envelope](types.go#L25)
+### type [Envelope](types.go#L22)
 
 `type Envelope struct { ... }`
 
 Envelope describes the final assembled message
 
-#### func [WrapAndSign](static.go#L18)
+#### func [WrapAndSign](static.go#L15)
 
 `func WrapAndSign(contentType string, payload []byte, signer signature.Signer, opts ...Option) (*Envelope, error)`
 
@@ -134,19 +134,19 @@ if err != nil {
 {"content_type":"types.datadoghq.com/v1/AppInfo","content":"hXgoYjBhNGNmYzlmZDIxMjUyZWFmNWUyMDkzYjcwODhkNTIyOGViMmI0N2RtYWludDIwMjItMTItMTJUMTM6NTc6MzJaZDEuMjBmdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"lQ+1B6mbw3UfIlCEGzfTCepGtlyjhtXe2hejZbyz8yPgiNK3+s51AJHRdIlHitcjuHzyevzTD8kU+NXdLSn7BQ=="}}
 ```
 
-### type [Option](options.go#L7)
+### type [Option](options.go#L4)
 
 `type Option func(*options)`
 
 Option describes the enveleope wrapping option function.
 
-#### func [WithTimestamp](options.go#L14)
+#### func [WithTimestamp](options.go#L11)
 
 `func WithTimestamp(r uint64) Option`
 
 WithTimestamp sets the signature timestamp.
 
-### type [Signature](types.go#L32)
+### type [Signature](types.go#L29)
 
 `type Signature struct { ... }`
 

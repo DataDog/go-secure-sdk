@@ -4,7 +4,7 @@ Package atomic provides atomic-level operations.
 
 ## Functions
 
-### func [WriteFile](write_file.go#L21)
+### func [WriteFile](write_file.go#L17)
 
 `func WriteFile(filename string, r io.Reader) (err error)`
 

@@ -12,6 +12,8 @@ Package crypto provides standardized and company wide cryptographic features.
 
 * [hashutil](./hashutil): Package hashutil provides secured cryptographic hash functions
 
+* [kem](./kem): Package kem provides Key Encapsulation Mechanism used to derive a shared secret from asymmetric materials.
+
 * [keyutil](./keyutil): Package keyutil provides cryptographic keys management functions.
 
 * [signature](./signature): Package signature provides Signature related primitives.

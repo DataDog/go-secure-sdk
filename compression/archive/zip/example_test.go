@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package zip
 
 import (
@@ -20,7 +17,7 @@ import (
 
 func ExampleCreate() {
 	// Create in-memory test filesystem.
-	// This is used to override the default bazel behavior which creates symlinks
+	// This is used to override the default bazel behaviour which creates symlinks
 	// to testdata. The archive creation ignores symlinks by design which is
 	// raising an error while using Bazel build.
 	//
@@ -58,12 +55,12 @@ func ExampleCreate() {
 	}
 
 	// Output:
-	// 00000000  50 4b 03 04 14 00 08 00  00 00 00 00 00 00 00 00  |PK..............|
+	// 00000000  50 4b 03 04 14 00 08 00  00 00 00 00 21 8a 00 00  |PK..........!...|
 	// 00000010  00 00 00 00 00 00 00 00  00 00 08 00 00 00 72 6f  |..............ro|
 	// 00000020  6f 74 2e 74 78 74 72 6f  6f 74 20 66 69 6c 65 20  |ot.txtroot file |
 	// 00000030  63 6f 6e 74 65 6e 74 50  4b 07 08 a0 78 c1 33 11  |contentPK...x.3.|
 	// 00000040  00 00 00 11 00 00 00 50  4b 01 02 14 03 14 00 08  |.......PK.......|
-	// 00000050  00 00 00 00 00 00 00 a0  78 c1 33 11 00 00 00 11  |........x.3.....|
+	// 00000050  00 00 00 00 00 21 8a a0  78 c1 33 11 00 00 00 11  |.....!..x.3.....|
 	// 00000060  00 00 00 08 00 00 00 00  00 00 00 00 00 01 00 00  |................|
 	// 00000070  80 00 00 00 00 72 6f 6f  74 2e 74 78 74 50 4b 05  |.....root.txtPK.|
 	// 00000080  06 00 00 00 00 01 00 01  00 36 00 00 00 47 00 00  |.........6...G..|

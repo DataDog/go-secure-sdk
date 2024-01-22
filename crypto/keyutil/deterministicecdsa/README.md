@@ -5,7 +5,7 @@ Package deterministicecdsa imports the Go 1.19.5 crypto/ecdsa package to keep de
 Golang 1.20 removed the deterministic ECDSA key geenration from a controlled random source feature.
 
 As recommended ([https://github.com/golang/go/issues/38548#issuecomment-617409930](https://github.com/golang/go/issues/38548#issuecomment-617409930)), the code as been copied from Go
-1.19.5 to restore the deterministic generation behavior.
+1.19.5 to restore the deterministic generation behaviour.
 By default, the developer should use `crypto/ecdsa` from its go runtime and use this alternative for tests
 or specific usecases where the key generation is derivated from a computed random source.
 
@@ -14,7 +14,7 @@ RSA generation determinism discussion - [https://github.com/golang/go/issues/385
 
 ## Functions
 
-### func [GenerateKey](ecdsa.go#L44)
+### func [GenerateKey](ecdsa.go#L41)
 
 `func GenerateKey(c elliptic.Curve, rand io.Reader) (*ecdsa.PrivateKey, error)`
 

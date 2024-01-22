@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package hashutil
 
 import (
@@ -9,8 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-
-	"github.com/DataDog/go-secure-sdk/log"
+	"log/slog"
 )
 
 // FileHash consumes the file content data to produce a raw checksum from the
@@ -31,7 +27,7 @@ func FileHash(root fs.FS, name string, hf crypto.Hash) ([]byte, error) {
 	}
 	defer func(closer io.Closer) {
 		if err := closer.Close(); err != nil {
-			log.Error(err).Messagef("unable to successfully close the file %q", name)
+			slog.Error("unable to successfully close the file", "err", err, "file", name)
 		}
 	}(f)
 
@@ -73,7 +69,7 @@ func FileHashes(root fs.FS, name string, hbs ...crypto.Hash) (map[crypto.Hash][]
 	}
 	defer func(closer io.Closer) {
 		if err := closer.Close(); err != nil {
-			log.Error(err).Messagef("unable to successfully close the file %q", name)
+			slog.Error("unable to successfully close the file", "err", err, "file", name)
 		}
 	}(f)
 

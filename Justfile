@@ -31,11 +31,11 @@ tool-cyclonedx-gomod:
 lint: tool-golangci tool-gofumpt tool-gci
     [ $(gofumpt -extra -l . | wc -l) != 0 ] && { echo 'code not formated'; exit 1; }; \
     [ $(gci diff -s standard -s "prefix(golang.org/x/)" -s default -s "prefix(github.com/DataDog)" . | wc -l) != 0 ] && { echo 'imports not sorted'; exit 1; }; \
-    golangci-lint run --timeout 5m
+    $(pwd)/tools/bin/golangci-lint run --timeout 5m
 
 fmt: tool-gofumpt tool-gci
-    gofumpt -w --extra . && \
-    gci write -s standard -s "prefix(golang.org/x/)" -s default -s "prefix(github.com/DataDog)" .
+    $(pwd)/tools/bin/gofumpt -w --extra . && \
+    $(pwd)/tools/bin/gci write -s standard -s "prefix(golang.org/x/)" -s default -s "prefix(github.com/DataDog)" .
 
 dist:
     mkdir dist
@@ -44,13 +44,13 @@ test:
     gotestsum ./... -- -cover -race
 
 check-licenses: tool-licenses
-    go-licenses check --disallowed_types=forbidden,restricted,reciprocal,permissive,unknown .
+    $(pwd)/tools/bin/go-licenses check --disallowed_types=forbidden,restricted,reciprocal,permissive,unknown .
 
 update-3rdparty-licenses: tool-licenses
-    go-licenses csv ./... > LICENSE-3rdparty.csv
+    $(pwd)/tools/bin/go-licenses csv ./... > LICENSE-3rdparty.csv
 
 bom: dist tool-cyclonedx-gomod
-    cyclonedx-gomod mod -licenses -type library -std -json -output dist/bom.json .
+    $(pwd)/tools/bin/cyclonedx-gomod mod -licenses -type library -std -json -output dist/bom.json .
 
 update-readme: tool-docbuild
-    docbuild
+    $(pwd)/tools/bin/docbuild

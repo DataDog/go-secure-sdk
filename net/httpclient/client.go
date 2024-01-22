@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package httpclient
 
 import (
@@ -55,7 +52,7 @@ func NewClient(az Authorizer, opts ...Option) *http.Client {
 	}
 
 	// Prepare safe transport settings
-	var t http.RoundTripper = &http.Transport{
+	tr := &http.Transport{
 		Proxy:                 http.ProxyFromEnvironment,
 		DialContext:           dialer.DialContext,
 		ForceAttemptHTTP2:     true,
@@ -65,6 +62,15 @@ func NewClient(az Authorizer, opts ...Option) *http.Client {
 		ExpectContinueTimeout: 1 * time.Second,
 		DisableKeepAlives:     dopts.disableKeepAlives,
 	}
+	if dopts.tlsConfig != nil {
+		tr.TLSClientConfig = dopts.tlsConfig
+	}
+	if dopts.tlsDialContext != nil {
+		tr.DialTLSContext = dopts.tlsDialContext
+	}
+
+	// Reduce interface type
+	var t http.RoundTripper = tr
 
 	// Decorate the HTTP round-tripper with request / response filter.
 	if az != nil {
