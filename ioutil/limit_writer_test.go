@@ -2,12 +2,11 @@ package ioutil
 
 import (
 	"bytes"
+	"crypto/rand"
 	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 func TestLimitWriter(t *testing.T) {
@@ -16,7 +15,7 @@ func TestLimitWriter(t *testing.T) {
 
 		out := &bytes.Buffer{}
 		tw := LimitWriter(out, 2048)
-		written, err := io.CopyN(tw, randomness.Reader, 1024)
+		written, err := io.CopyN(tw, rand.Reader, 1024)
 		require.NoError(t, err)
 		require.Equal(t, int64(1024), written)
 		require.Equal(t, int(1024), out.Len())
@@ -26,7 +25,7 @@ func TestLimitWriter(t *testing.T) {
 		t.Parallel()
 
 		tw := LimitWriter(nil, 1024)
-		written, err := io.CopyN(tw, randomness.Reader, 2048)
+		written, err := io.CopyN(tw, rand.Reader, 2048)
 		require.Error(t, err)
 		require.Equal(t, int64(0), written)
 	})
@@ -36,7 +35,7 @@ func TestLimitWriter(t *testing.T) {
 
 		out := &bytes.Buffer{}
 		tw := LimitWriter(out, 1024)
-		written, err := io.CopyN(tw, randomness.Reader, 2048)
+		written, err := io.CopyN(tw, rand.Reader, 2048)
 		require.NoError(t, err)
 		require.Equal(t, int64(2048), written)
 		require.Equal(t, int(1024), out.Len())

@@ -12,8 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	security "github.com/DataDog/go-secure-sdk"
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
+
+var _ io.Reader = (*zeroReader)(nil)
+
+type zeroReader struct{}
+
+func (dz zeroReader) Read(p []byte) (n int, err error) {
+	for i := range p {
+		p[i] = 0
+	}
+	return len(p), nil
+}
 
 func Test_ed25519_InvalidKeys(t *testing.T) {
 	t.Run("invalid private key length", func(t *testing.T) {
@@ -181,7 +191,7 @@ func benchmarkSign(inputLen int, s Signer) func(*testing.B) {
 		b.ReportAllocs()
 
 		buf := &bytes.Buffer{}
-		_, err := io.CopyN(buf, randomness.Reader, int64(inputLen))
+		_, err := io.CopyN(buf, &zeroReader{}, int64(inputLen))
 		require.NoError(b, err)
 		msg := buf.Bytes()
 
@@ -227,7 +237,7 @@ func benchmarkVerify(inputLen int, s Signer, v Verifier) func(*testing.B) {
 		b.ReportAllocs()
 
 		buf := &bytes.Buffer{}
-		_, err := io.CopyN(buf, randomness.Reader, int64(inputLen))
+		_, err := io.CopyN(buf, &zeroReader{}, int64(inputLen))
 		require.NoError(b, err)
 		msg := buf.Bytes()
 

@@ -32,7 +32,7 @@ ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 
 `func FileHashes(root fs.FS, name string, hbs ...crypto.Hash) (map[crypto.Hash][]byte, error)`
 
-FileHashes consumes the file content data to produce a raw checksum from the
+FileHash consumes the file content data to produce a raw checksum from the
 given crypto.Hash implementation collection.
 
 ```golang

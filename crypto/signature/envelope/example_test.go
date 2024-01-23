@@ -1,20 +1,18 @@
-// SPDX-FileCopyrightText: 2023-present Datadog, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 package envelope
 
 import (
 	"bytes"
-	"crypto/ed25519"
+	"crypto"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fxamacker/cbor/v2"
 
+	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 	"github.com/DataDog/go-secure-sdk/crypto/signature"
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 type AppInfo struct {
@@ -29,13 +27,13 @@ type AppInfo struct {
 
 func ExampleWrapAndSign() {
 	// Generate deterministic key pair for demonstration purpose
-	_, pk, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+	_, pk, err := keyutil.GenerateKeyPair(keyutil.ED25519)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create a signer instance from the given crypto material
-	signer, err := signature.FromPrivateKey(pk)
+	signer, err := signature.FromPrivateKey(pk.(crypto.Signer))
 	if err != nil {
 		panic(err)
 	}
@@ -66,28 +64,28 @@ func ExampleWrapAndSign() {
 		panic(err)
 	}
 
-	// Output:
-	// {"content_type":"types.datadoghq.com/v1/AppInfo","content":"hXgoYjBhNGNmYzlmZDIxMjUyZWFmNWUyMDkzYjcwODhkNTIyOGViMmI0N2RtYWludDIwMjItMTItMTJUMTM6NTc6MzJaZDEuMjBmdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"lQ+1B6mbw3UfIlCEGzfTCepGtlyjhtXe2hejZbyz8yPgiNK3+s51AJHRdIlHitcjuHzyevzTD8kU+NXdLSn7BQ=="}}
+	// Sample Output:
+	// {"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"sxmBbwylYhmtvtAyIuvPmjNncvJCxBmZeNBD4bnS17avg2nAueHg1hStwrjzErqU5Mr4qpWGKGKH8+dUbhyQBQ=="}}
 	if err := json.NewEncoder(os.Stdout).Encode(envelope); err != nil {
 		panic(err)
 	}
 }
 
 func ExampleVerifyAndUnwrap() {
-	// Generate deterministic key pair for demonstration purpose
-	pub, _, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+	// Load the public key from the given base64 encoded string
+	pubJWK, err := keyutil.FromJWK(strings.NewReader(`{"kty":"OKP","kid":"BVGkvDe0tG_SGH4EkRx-lDTEMcDbP6Y-_JLLqBzSEw0","crv":"Ed25519","x":"leArIm2WeysClgk454i4u7pLn-vYQxBTjEpX1FDk1pk"}`))
 	if err != nil {
 		panic(err)
 	}
 
 	// Create a verifier instance from the given crypto material
-	verifier, err := signature.FromPublicKey(pub)
+	verifier, err := signature.FromPublicKey(pubJWK.Key)
 	if err != nil {
 		panic(err)
 	}
 
 	// Received envelope
-	envelopeRaw := `{"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"sxmBbwylYhmtvtAyIuvPmjNncvJCxBmZeNBD4bnS17avg2nAueHg1hStwrjzErqU5Mr4qpWGKGKH8+dUbhyQBQ=="}}`
+	envelopeRaw := `{"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"IjPJBzTlkRaA2fyfuHef6RuwQ82WbWHZcNugJUhNXSA=","timestamp":1670850610,"proof":"GQsw4q/OlQ4oZ4ZgseNsOgE2EbtH+G66yRgXvdwBLHQTA5lceZTP7OsK7i3zJz9gOFQdfro8L8oMvI90kuIyAQ=="}}`
 
 	// Try to deocde the envelope
 	var envelope Envelope

@@ -2,13 +2,12 @@ package encryption
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"sync"
-
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 func ExampleValue() {
@@ -89,7 +88,7 @@ func ExampleChunked() {
 		b64 := base64.NewEncoder(base64.StdEncoding, pw)
 
 		// Create a fake file content stream (limited to 10MB)
-		fileContentReader := io.LimitReader(randomness.NewReader(1), 10<<20)
+		fileContentReader := io.LimitReader(rand.Reader, 10<<20)
 		_, err := io.Copy(b64, fileContentReader)
 
 		defer b64.Close()

@@ -2,19 +2,6 @@
 
 Package randomness provides `math/rand` dropin replace with secured initialization.
 
-## Variables
-
-Reader exposes a thread-safe PRNG infinite random bytes generator initialized
-with a CSPRNG. Due to its infinite nature, you must ensure a data read limit
-in time or space to prevent hanging reader behaviour.
-
-This reader is initialized with a different seed to ensure no collision
-between the atomic generation function calls and the stream generator.
-
-```golang
-var Reader io.Reader = NewReader(CryptoSeed())
-```
-
 ## Functions
 
 ### func [ASCII](generators.go#L59)
@@ -126,7 +113,7 @@ pub: 95e5c0f481e71146eef4b4a1d05e3c09294952a48700068dea29f133490b4a90
 sk: 14531fe31a69d5de47b9ebb2a187f4dd9f0cb0426151253d0b063b07ecb036c595e5c0f481e71146eef4b4a1d05e3c09294952a48700068dea29f133490b4a90
 ```
 
-### func [ExpFloat64](global.go#L80)
+### func [ExpFloat64](global.go#L76)
 
 `func ExpFloat64() float64`
 
@@ -140,14 +127,14 @@ callers can adjust the output using:
 sample = ExpFloat64() / desiredRateParameter
 ```
 
-### func [Float32](global.go#L52)
+### func [Float32](global.go#L48)
 
 `func Float32() float32`
 
 Float32 returns, as a float32, a pseudo-random number in the half-open interval [0.0,1.0)
 from the default Source.
 
-### func [Float64](global.go#L48)
+### func [Float64](global.go#L44)
 
 `func Float64() float64`
 
@@ -163,20 +150,20 @@ characters in lower case (0-9+a-f).
 
 Entropy is 4 bits per character.
 
-### func [Int](global.go#L29)
+### func [Int](global.go#L25)
 
 `func Int() int`
 
 Int returns a non-negative pseudo-random int from the default Source.
 
-### func [Int31](global.go#L26)
+### func [Int31](global.go#L22)
 
 `func Int31() int32`
 
 Int31 returns a non-negative pseudo-random 31-bit integer as an int32
 from the default Source.
 
-### func [Int31n](global.go#L39)
+### func [Int31n](global.go#L35)
 
 `func Int31n(n int32) int32`
 
@@ -184,14 +171,14 @@ Int31n returns, as an int32, a non-negative pseudo-random number in the half-ope
 from the default Source.
 It panics if n <= 0.
 
-### func [Int63](global.go#L14)
+### func [Int63](global.go#L10)
 
 `func Int63() int64`
 
 Int63 returns a non-negative pseudo-random 63-bit integer as an int64
 from the default Source.
 
-### func [Int63n](global.go#L34)
+### func [Int63n](global.go#L30)
 
 `func Int63n(n int64) int64`
 
@@ -199,7 +186,7 @@ Int63n returns, as an int64, a non-negative pseudo-random number in the half-ope
 from the default Source.
 It panics if n <= 0.
 
-### func [Intn](global.go#L44)
+### func [Intn](global.go#L40)
 
 `func Intn(n int) int`
 
@@ -207,13 +194,7 @@ Intn returns, as an int, a non-negative pseudo-random number in the half-open in
 from the default Source.
 It panics if n <= 0.
 
-### func [NewReader](global.go#L91)
-
-`func NewReader(seed int64) io.Reader`
-
-NewReader returns an infinite random data generator stream reader.
-
-### func [NormFloat64](global.go#L71)
+### func [NormFloat64](global.go#L67)
 
 `func NormFloat64() float64`
 
@@ -237,14 +218,14 @@ numeric characters in the POSIX/C locale (0-9).
 
 Entropy is 3.32 bits per character.
 
-### func [Perm](global.go#L56)
+### func [Perm](global.go#L52)
 
 `func Perm(n int) []int`
 
 Perm returns, as a slice of n ints, a pseudo-random permutation of the integers
 in the half-open interval [0,n) from the default Source.
 
-### func [Shuffle](global.go#L61)
+### func [Shuffle](global.go#L57)
 
 `func Shuffle(n int, swap func(i, j int))`
 
@@ -262,14 +243,14 @@ characters.
 
 Entropy is log2(len(chars)) bits per character.
 
-### func [Uint32](global.go#L18)
+### func [Uint32](global.go#L14)
 
 `func Uint32() uint32`
 
 Uint32 returns a pseudo-random 32-bit value as a uint32
 from the default Source.
 
-### func [Uint64](global.go#L22)
+### func [Uint64](global.go#L18)
 
 `func Uint64() uint64`
 
@@ -299,7 +280,7 @@ Entropy is 4.32 bits per character.
 
 NewLockedRand implements a threadsafe wrapper to the math/rand.Rand implementation.
 
-#### func (*LockedRand) [ExpFloat64](locked_rand.go#L143)
+#### func (*LockedRand) [ExpFloat64](locked_rand.go#L135)
 
 `func (lr *LockedRand) ExpFloat64() (n float64)`
 
@@ -313,58 +294,58 @@ callers can adjust the output using:
 sample = ExpFloat64() / desiredRateParameter
 ```
 
-#### func (*LockedRand) [Float32](locked_rand.go#L107)
+#### func (*LockedRand) [Float32](locked_rand.go#L99)
 
 `func (lr *LockedRand) Float32() (n float32)`
 
 Float32 returns, as a float32, a pseudo-random number in [0.0,1.0).
 
-#### func (*LockedRand) [Float64](locked_rand.go#L99)
+#### func (*LockedRand) [Float64](locked_rand.go#L91)
 
 `func (lr *LockedRand) Float64() (n float64)`
 
 Float64 returns, as a float64, a pseudo-random number in [0.0,1.0).
 
-#### func (*LockedRand) [Int](locked_rand.go#L64)
+#### func (*LockedRand) [Int](locked_rand.go#L56)
 
 `func (lr *LockedRand) Int() (n int)`
 
 Int returns a non-negative pseudo-random int.
 
-#### func (*LockedRand) [Int31](locked_rand.go#L56)
+#### func (*LockedRand) [Int31](locked_rand.go#L48)
 
 `func (lr *LockedRand) Int31() (n int32)`
 
 Int31 returns a non-negative pseudo-random 31-bit integer as an int32.
 
-#### func (*LockedRand) [Int31n](locked_rand.go#L82)
+#### func (*LockedRand) [Int31n](locked_rand.go#L74)
 
 `func (lr *LockedRand) Int31n(n int32) (r int32)`
 
 Int31n returns, as an int32, a non-negative pseudo-random number in [0,n).
 It panics if n <= 0.
 
-#### func (*LockedRand) [Int63](locked_rand.go#L32)
+#### func (*LockedRand) [Int63](locked_rand.go#L24)
 
 `func (lr *LockedRand) Int63() (n int64)`
 
 Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 
-#### func (*LockedRand) [Int63n](locked_rand.go#L73)
+#### func (*LockedRand) [Int63n](locked_rand.go#L65)
 
 `func (lr *LockedRand) Int63n(n int64) (r int64)`
 
 Int63n returns, as an int64, a non-negative pseudo-random number in [0,n).
 It panics if n <= 0.
 
-#### func (*LockedRand) [Intn](locked_rand.go#L91)
+#### func (*LockedRand) [Intn](locked_rand.go#L83)
 
 `func (lr *LockedRand) Intn(n int) (r int)`
 
 Intn returns, as an int, a non-negative pseudo-random number in [0,n).
 It panics if n <= 0.
 
-#### func (*LockedRand) [NormFloat64](locked_rand.go#L129)
+#### func (*LockedRand) [NormFloat64](locked_rand.go#L121)
 
 `func (lr *LockedRand) NormFloat64() (n float64)`
 
@@ -378,28 +359,13 @@ adjust the output using:
 sample = NormFloat64() * desiredStdDev + desiredMean
 ```
 
-#### func (*LockedRand) [Perm](locked_rand.go#L115)
+#### func (*LockedRand) [Perm](locked_rand.go#L107)
 
 `func (lr *LockedRand) Perm(n int) (r []int)`
 
 Perm returns, as a slice of n ints, a pseudo-random permutation of the integers [0,n).
 
-#### func (*LockedRand) [Read](locked_rand.go#L162)
-
-`func (lr *LockedRand) Read(p []byte) (n int, err error)`
-
-Read generates len(p) random bytes and writes them into p. It
-always returns len(p) and a nil error.
-Read should not be called concurrently with any other Rand method.
-
-#### func (*LockedRand) [Seed](locked_rand.go#L25)
-
-`func (lr *LockedRand) Seed(seed int64)`
-
-Seed uses the provided seed value to initialize the generator to a deterministic state.
-Seed should not be called concurrently with any other Rand method.
-
-#### func (*LockedRand) [Shuffle](locked_rand.go#L153)
+#### func (*LockedRand) [Shuffle](locked_rand.go#L145)
 
 `func (lr *LockedRand) Shuffle(n int, swap func(i, j int))`
 
@@ -407,13 +373,13 @@ Shuffle pseudo-randomizes the order of elements.
 n is the number of elements. Shuffle panics if n < 0.
 swap swaps the elements with indexes i and j.
 
-#### func (*LockedRand) [Uint32](locked_rand.go#L40)
+#### func (*LockedRand) [Uint32](locked_rand.go#L32)
 
 `func (lr *LockedRand) Uint32() (n uint32)`
 
 Uint32 returns a pseudo-random 32-bit value as a uint32.
 
-#### func (*LockedRand) [Uint64](locked_rand.go#L48)
+#### func (*LockedRand) [Uint64](locked_rand.go#L40)
 
 `func (lr *LockedRand) Uint64() (n uint64)`
 

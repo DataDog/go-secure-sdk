@@ -20,14 +20,6 @@ type LockedRand struct {
 	r  *rand.Rand
 }
 
-// Seed uses the provided seed value to initialize the generator to a deterministic state.
-// Seed should not be called concurrently with any other Rand method.
-func (lr *LockedRand) Seed(seed int64) {
-	lr.lk.Lock()
-	lr.r.Seed(seed)
-	lr.lk.Unlock()
-}
-
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func (lr *LockedRand) Int63() (n int64) {
 	lr.lk.Lock()
@@ -154,14 +146,4 @@ func (lr *LockedRand) Shuffle(n int, swap func(i, j int)) {
 	lr.lk.Lock()
 	lr.r.Shuffle(n, swap)
 	lr.lk.Unlock()
-}
-
-// Read generates len(p) random bytes and writes them into p. It
-// always returns len(p) and a nil error.
-// Read should not be called concurrently with any other Rand method.
-func (lr *LockedRand) Read(p []byte) (n int, err error) {
-	lr.lk.Lock()
-	n, err = lr.r.Read(p)
-	lr.lk.Unlock()
-	return
 }

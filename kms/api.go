@@ -40,6 +40,11 @@ type VerificationPublicKeyExporter interface {
 	VerificationPublicKeys(ctx context.Context) ([]crypto.PublicKey, error)
 }
 
+// KeyExporter represents secret key exporter contract.
+type KeyExporter interface {
+	ExportKey(ctx context.Context) (KeyType, string, error)
+}
+
 //go:generate mockgen -destination mock/service.mock.go -package mock github.com/DataDog/go-secure-sdk/kms Service
 
 // Service represents the Vault Transit backend operation service contract.
@@ -51,14 +56,17 @@ type Service interface {
 	PublicKeyExporter
 	KeyRotator
 	VerificationPublicKeyExporter
+	KeyExporter
 }
 
 // KeyType represents the type of the key
 type KeyType int
 
 const (
-	KeyTypeSymmetric KeyType = iota
+	KeyTypeUnknown KeyType = iota
+	KeyTypeSymmetric
 	KeyTypeRSA
 	KeyTypeEd25519
 	KeyTypeECDSA
+	KeyTypeHMAC
 )

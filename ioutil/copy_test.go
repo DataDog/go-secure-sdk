@@ -1,11 +1,10 @@
 package ioutil
 
 import (
+	"crypto/rand"
 	"errors"
 	"io"
 	"testing"
-
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 var _ io.Reader = (*fakeReader)(nil)
@@ -43,7 +42,7 @@ func TestLimitCopy(t *testing.T) {
 			args: args{
 				maxSize: 1 << 20, // 1MB
 				w:       nil,
-				r:       io.LimitReader(randomness.Reader, 1024),
+				r:       io.LimitReader(rand.Reader, 1024),
 			},
 			wantErr: true,
 		},
@@ -60,7 +59,7 @@ func TestLimitCopy(t *testing.T) {
 			name: "too large",
 			args: args{
 				maxSize: 1 << 20, // 1MB
-				r:       io.LimitReader(randomness.Reader, 2<<20),
+				r:       io.LimitReader(rand.Reader, 2<<20),
 				w:       io.Discard,
 			},
 			wantErr: true,
@@ -78,7 +77,7 @@ func TestLimitCopy(t *testing.T) {
 			name: "write error",
 			args: args{
 				maxSize: 1 << 20, // 1MB
-				r:       io.LimitReader(randomness.Reader, 1024),
+				r:       io.LimitReader(rand.Reader, 1024),
 				w:       &fakeWriter{},
 			},
 			wantErr: true,
@@ -88,7 +87,7 @@ func TestLimitCopy(t *testing.T) {
 			name: "valid",
 			args: args{
 				maxSize: 1 << 20, // 1MB
-				r:       io.LimitReader(randomness.Reader, 1024),
+				r:       io.LimitReader(rand.Reader, 1024),
 				w:       io.Discard,
 			},
 		},

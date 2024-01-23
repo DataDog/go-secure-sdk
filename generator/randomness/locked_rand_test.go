@@ -25,7 +25,6 @@ func TestConcurrentLockedRand(t *testing.T) {
 	for i := 0; i < numRoutines; i++ {
 		go func(i int) {
 			defer wg.Done()
-			buf := make([]byte, 997)
 			for j := 0; j < numCycles; j++ {
 				var seed int64
 				seed += int64(r.ExpFloat64())
@@ -40,11 +39,6 @@ func TestConcurrentLockedRand(t *testing.T) {
 				for _, p := range r.Perm(10) {
 					seed += int64(p)
 				}
-				r.Read(buf)
-				for _, b := range buf {
-					seed += int64(b)
-				}
-				r.Seed(int64(i*j) * seed)
 			}
 		}(i)
 	}

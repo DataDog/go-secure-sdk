@@ -51,7 +51,7 @@ func FileHash(root fs.FS, name string, hf crypto.Hash) ([]byte, error) {
 	return res, nil
 }
 
-// FileHashes consumes the file content data to produce a raw checksum from the
+// FileHash consumes the file content data to produce a raw checksum from the
 // given crypto.Hash implementation collection.
 func FileHashes(root fs.FS, name string, hbs ...crypto.Hash) (map[crypto.Hash][]byte, error) {
 	// Check arguments

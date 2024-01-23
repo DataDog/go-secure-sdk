@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,17 +11,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
+	"golang.org/x/crypto/hkdf"
 )
 
 //nolint:paralleltest // Stateful tests
 func Test_UUID_Generate(t *testing.T) {
 	// Create a deterministic generator
 	g := &verifiableUUIDGenerator{
-		randReader: randomness.NewReader(1),
+		randReader: hkdf.Expand(sha256.New, []byte("deterministic-nonce-entropy-source-for-testing-purpose"), nil),
 		secretKey:  []byte("my-very-secret-key-for-mac"),
 		source: func() ([16]byte, error) {
-			u, err := uuid.NewRandomFromReader(randomness.NewReader(2))
+			u, err := uuid.NewRandomFromReader(strings.NewReader("00000-deterministic-uuid-for-testing-purpose"))
 			if err != nil {
 				return [16]byte{}, fmt.Errorf("unable to generate a random UUIDv4: %w", err)
 			}
@@ -29,28 +30,28 @@ func Test_UUID_Generate(t *testing.T) {
 	}
 
 	t.Run("first generation", func(t *testing.T) {
-		expectedOut := "1rEhxXi9mBwmkGpXxD4Njd_wHOKGDkYTeOIHSFgS9ul7cDrVX3ERymo5SfvLQH7HcuSNdpPTy2fAZKEynG"
+		expectedOut := "1sVEx8brJypjLjRZvve28r_Ncn5z2WCGdcnC2lA9ioSFJkQf4BiwuzEEhAC0ZKQ22FMa7uX5DZgtrhpkl6"
 		out, err := g.Generate()
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("second generation", func(t *testing.T) {
-		expectedOut := "1rEhxXi9mBwmkGpXxD4Njd_YQbaiGsOHwcZlL6rxEP9rgDN8mVFha61wt5NO1urxvxMWswPy66sNidU6Mq"
+		expectedOut := "1sVEx8brJypjLjRZvve28r_Fe1v4h2ab9AcSV91D8AClHamvmIxxWt2lSJvatzDzvP8nF5lC5cLYkUHRzz"
 		out, err := g.Generate()
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("first generation with prefix", func(t *testing.T) {
-		expectedOut := "at_1rEhxXi9mBwmkGpXxD4Njd_MLdlJaU0J9toBacxSJT3BQFDqhqt1XDKGc3Wo60WGYDKYG3jBkLtD7RK6TT"
+		expectedOut := "at_1sVEx8brJypjLjRZvve28r_1paeN44l114dnyImf3vnWTe4MYctDUi9HmpONWr17yWkM2SIurDJrs3w7q43"
 		out, err := g.Generate(WithTokenPrefix("at"))
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("second generation with prefix", func(t *testing.T) {
-		expectedOut := "et_1rEhxXi9mBwmkGpXxD4Njd_F1TuPP5aLrr1OShjyGUkq9YeMXZrZjpnNAkfLorbsinjMDHdtItdsWstkmh"
+		expectedOut := "et_1sVEx8brJypjLjRZvve28r_bSZB2XaBgxWz9QUBg7Stosw7onVkW7eCVsKEzQkvp3oxaEuUgeOsqiVbdvi"
 		out, err := g.Generate(WithTokenPrefix("et"))
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
@@ -76,7 +77,7 @@ func Test_UUIDGenerate_RandError(t *testing.T) {
 		randReader: strings.NewReader(""),
 		secretKey:  []byte("my-very-secret-key-for-mac"),
 		source: func() ([16]byte, error) {
-			u, err := uuid.NewRandomFromReader(randomness.NewReader(2))
+			u, err := uuid.NewRandomFromReader(strings.NewReader("00001-deterministic-uuid-for-testing-purpose"))
 			if err != nil {
 				return [16]byte{}, fmt.Errorf("unable to generate a random UUIDv4: %w", err)
 			}
@@ -110,10 +111,10 @@ func Test_UUIDGenerate_SourceError(t *testing.T) {
 func Test_UUID_Verify(t *testing.T) {
 	// Create a deterministic generator
 	g := &verifiableUUIDGenerator{
-		randReader: randomness.NewReader(1),
+		randReader: strings.NewReader("deterministic-nonce-entropy-source-for-testing-purpose"),
 		secretKey:  []byte("my-very-secret-key-for-mac"),
 		source: func() ([16]byte, error) {
-			u, err := uuid.NewRandomFromReader(randomness.NewReader(2))
+			u, err := uuid.NewRandomFromReader(strings.NewReader("00002-deterministic-uuid-for-testing-purpose"))
 			if err != nil {
 				return [16]byte{}, fmt.Errorf("unable to generate a random UUIDv4: %w", err)
 			}

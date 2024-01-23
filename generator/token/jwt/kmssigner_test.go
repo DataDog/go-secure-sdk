@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"context"
-	"crypto/ed25519"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -21,7 +20,6 @@ import (
 	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 	"github.com/DataDog/go-secure-sdk/crypto/signature"
 	sigmock "github.com/DataDog/go-secure-sdk/crypto/signature/test/mock"
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 	"github.com/DataDog/go-secure-sdk/kms"
 	kmsmock "github.com/DataDog/go-secure-sdk/kms/mock"
 	"github.com/DataDog/go-secure-sdk/kms/vault"
@@ -61,7 +59,7 @@ func TestKMSSigner(t *testing.T) {
 		{
 			name: "valid",
 			prepare: func(ms *kmsmock.MockService) {
-				pub, _, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+				pub, _, err := keyutil.GenerateDefaultKeyPair()
 				require.NoError(t, err)
 				ms.EXPECT().PublicKey(gomock.Any()).Return(pub, nil)
 			},

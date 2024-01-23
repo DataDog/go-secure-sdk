@@ -18,8 +18,18 @@ import (
 	"github.com/DataDog/go-secure-sdk/crypto/signature"
 	v1 "github.com/DataDog/go-secure-sdk/crypto/signature/envelope/internal/v1"
 	"github.com/DataDog/go-secure-sdk/crypto/signature/test/mock"
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
+
+var _ io.Reader = (*zeroReader)(nil)
+
+type zeroReader struct{}
+
+func (dz zeroReader) Read(p []byte) (n int, err error) {
+	for i := range p {
+		p[i] = 0
+	}
+	return len(p), nil
+}
 
 func TestWrapAndSign(t *testing.T) {
 	t.Parallel()
@@ -431,7 +441,7 @@ func benchmarkWrapAndSign(inputLen int, pk crypto.Signer) func(*testing.B) {
 		}
 
 		buf := &bytes.Buffer{}
-		io.CopyN(buf, randomness.Reader, int64(inputLen))
+		io.CopyN(buf, &zeroReader{}, int64(inputLen))
 		msg := buf.Bytes()
 
 		for i := 0; i < b.N; i++ {
@@ -492,7 +502,7 @@ func benchmarkVerifyAndUnwrap(inputLen int, pk crypto.Signer, pub crypto.PublicK
 			b.Fatal(err)
 		}
 		buf := &bytes.Buffer{}
-		io.CopyN(buf, randomness.Reader, int64(inputLen))
+		io.CopyN(buf, &zeroReader{}, int64(inputLen))
 		msg := buf.Bytes()
 
 		e, err := WrapAndSign("benchmarking", msg, s)
