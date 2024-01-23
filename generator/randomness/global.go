@@ -1,9 +1,5 @@
 package randomness
 
-import (
-	"io"
-)
-
 /*
  * Top-level convenience functions
  */
@@ -78,16 +74,3 @@ func NormFloat64() float64 { return globalRand.NormFloat64() }
 //
 //	sample = ExpFloat64() / desiredRateParameter
 func ExpFloat64() float64 { return globalRand.ExpFloat64() }
-
-// Reader exposes a thread-safe PRNG infinite random bytes generator initialized
-// with a CSPRNG. Due to its infinite nature, you must ensure a data read limit
-// in time or space to prevent hanging reader behaviour.
-//
-// This reader is initialized with a different seed to ensure no collision
-// between the atomic generation function calls and the stream generator.
-var Reader io.Reader = NewReader(CryptoSeed())
-
-// NewReader returns an infinite random data generator stream reader.
-func NewReader(seed int64) io.Reader {
-	return NewLockedRand(seed)
-}

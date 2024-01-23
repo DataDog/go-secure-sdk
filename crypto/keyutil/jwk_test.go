@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/json"
+	"io"
 	"math/big"
 	"strings"
 	"testing"
@@ -13,8 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
-
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 func TestToJWK(t *testing.T) {
@@ -30,43 +29,43 @@ func TestToJWK(t *testing.T) {
 	t.Run("ED25519", func(t *testing.T) {
 		t.Parallel()
 
-		pub, pk, err := GenerateKeyPairWithRand(randomness.NewLockedRand(1), ED25519)
+		pub, pk, err := GenerateKeyPairWithRand(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"), ED25519)
 		require.NoError(t, err)
 
 		pubJWK, err := ToJWK(pub)
 		require.NoError(t, err)
 		pubRaw, err := json.Marshal(pubJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"kty":"OKP","kid":"pLkKHIDVUOtkdhfj6bkmCV29eu61xQOqcwATbfP466c","crv":"Ed25519","x":"bxWBcJu3se8DDSENsY47C6HHdvumXYzarQVBUULRifg"}`, string(pubRaw))
+		require.Equal(t, `{"kty":"OKP","kid":"g1nc0NnN4CMEbdsNL-7X7TFxVtGZsBSTOgp2wuUFx8s","crv":"Ed25519","x":"1W8l-m7roH-0ma4gWUwbbwotRLcPrLkW39zJd5rarnE"}`, string(pubRaw))
 
 		pkJWK, err := ToJWK(pk)
 		require.NoError(t, err)
 		pkRaw, err := json.Marshal(pkJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"kty":"OKP","kid":"pLkKHIDVUOtkdhfj6bkmCV29eu61xQOqcwATbfP466c","crv":"Ed25519","x":"bxWBcJu3se8DDSENsY47C6HHdvumXYzarQVBUULRifg","d":"Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"}`, string(pkRaw))
+		require.Equal(t, `{"kty":"OKP","kid":"g1nc0NnN4CMEbdsNL-7X7TFxVtGZsBSTOgp2wuUFx8s","crv":"Ed25519","x":"1W8l-m7roH-0ma4gWUwbbwotRLcPrLkW39zJd5rarnE","d":"VXYzOEJ5R0NaVThXUDE4UG1tSWRjcFZteDAwUUEzeE4"}`, string(pkRaw))
 	})
 
 	t.Run("EC", func(t *testing.T) {
 		t.Parallel()
 
-		pub, pk, err := GenerateKeyPairWithRand(randomness.NewLockedRand(1), EC)
+		pub, pk, err := GenerateKeyPairWithRand(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"), EC)
 		require.NoError(t, err)
 
 		pubJWK, err := ToJWK(pub)
 		require.NoError(t, err)
 		pubRaw, err := json.Marshal(pubJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"kty":"EC","kid":"Omv6VHrsh5UADR4iFyPmMoG5796UpOHYJxcHccNr86A","crv":"P-256","x":"vZ1kpJjwsUocZ6eNxfj6zrWxle7DX5G0P5Mc4vRIKNE","y":"kl2JfGSa_8LTlAV10JbtjRmwkIscaiBCxidYkFdRk5U"}`, string(pubRaw))
+		require.Equal(t, `{"kty":"EC","kid":"tw9bjwjt9tfv-htnesSgISBnSoqLlJEpJd-ibKl0bGw","crv":"P-256","x":"apLkq8r70jyghpOWwE5quhtUpFUehVOSYxHL5EmYNZM","y":"HWzVqOb6yKJkk-bJu-YlDIoQ2FFLp1aVd1nkrrM1Xb0"}`, string(pubRaw))
 
 		pkJWK, err := ToJWK(pk)
 		require.NoError(t, err)
 		pkRaw, err := json.Marshal(pkJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"kty":"EC","kid":"Omv6VHrsh5UADR4iFyPmMoG5796UpOHYJxcHccNr86A","crv":"P-256","x":"vZ1kpJjwsUocZ6eNxfj6zrWxle7DX5G0P5Mc4vRIKNE","y":"kl2JfGSa_8LTlAV10JbtjRmwkIscaiBCxidYkFdRk5U","d":"N8HEXiXhvByrJ1zKSFT6Y2l2KqDWwWzKf-t4CyWrNKc"}`, string(pkRaw))
+		require.Equal(t, `{"kty":"EC","kid":"tw9bjwjt9tfv-htnesSgISBnSoqLlJEpJd-ibKl0bGw","crv":"P-256","x":"apLkq8r70jyghpOWwE5quhtUpFUehVOSYxHL5EmYNZM","y":"HWzVqOb6yKJkk-bJu-YlDIoQ2FFLp1aVd1nkrrM1Xb0","d":"nM5_mbhBvdWD05MeAEWSO7Qc3hnFtl0zuGrmPLkeOvo"}`, string(pkRaw))
 	})
 }
 
-func TestToJWKS(t *testing.T) {
+func TestToPublicJWKS(t *testing.T) {
 	t.Parallel()
 
 	t.Run("nil key", func(t *testing.T) {
@@ -79,20 +78,20 @@ func TestToJWKS(t *testing.T) {
 	t.Run("ED25519", func(t *testing.T) {
 		t.Parallel()
 
-		pub, pk, err := GenerateKeyPairWithRand(randomness.NewLockedRand(1), ED25519)
+		pub, pk, err := GenerateKeyPairWithRand(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"), ED25519)
 		require.NoError(t, err)
 
 		pubJWK, err := ToPublicJWKS(pub)
 		require.NoError(t, err)
 		pubRaw, err := json.Marshal(pubJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"keys":[{"kty":"OKP","kid":"pLkKHIDVUOtkdhfj6bkmCV29eu61xQOqcwATbfP466c","crv":"Ed25519","x":"bxWBcJu3se8DDSENsY47C6HHdvumXYzarQVBUULRifg"}]}`, string(pubRaw))
+		require.Equal(t, `{"keys":[{"kty":"OKP","kid":"g1nc0NnN4CMEbdsNL-7X7TFxVtGZsBSTOgp2wuUFx8s","crv":"Ed25519","x":"1W8l-m7roH-0ma4gWUwbbwotRLcPrLkW39zJd5rarnE"}]}`, string(pubRaw))
 
 		pkJWK, err := ToPublicJWKS(pk)
 		require.NoError(t, err)
 		pkRaw, err := json.Marshal(pkJWK)
 		require.NoError(t, err)
-		require.Equal(t, `{"keys":[{"kty":"OKP","kid":"pLkKHIDVUOtkdhfj6bkmCV29eu61xQOqcwATbfP466c","crv":"Ed25519","x":"bxWBcJu3se8DDSENsY47C6HHdvumXYzarQVBUULRifg"}]}`, string(pkRaw))
+		require.Equal(t, `{"keys":[{"kty":"OKP","kid":"g1nc0NnN4CMEbdsNL-7X7TFxVtGZsBSTOgp2wuUFx8s","crv":"Ed25519","x":"1W8l-m7roH-0ma4gWUwbbwotRLcPrLkW39zJd5rarnE"}]}`, string(pkRaw))
 	})
 }
 
@@ -109,7 +108,7 @@ func TestFromJWK(t *testing.T) {
 	t.Run("too large content", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := FromJWK(randomness.NewReader(1))
+		_, err := FromJWK(io.LimitReader(rand.Reader, maxJWKLength+1))
 		require.Error(t, err)
 	})
 
@@ -148,7 +147,7 @@ func TestFromJWK(t *testing.T) {
 func TestJWKEncryptionDecryption(t *testing.T) {
 	t.Parallel()
 
-	_, pk, err := GenerateKeyPairWithRand(randomness.NewLockedRand(1), ED25519)
+	_, pk, err := GenerateKeyPair(ED25519)
 	require.NoError(t, err)
 
 	jwk, err := ToJWK(pk)

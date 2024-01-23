@@ -10,6 +10,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
+	kms "github.com/DataDog/go-secure-sdk/kms"
 )
 
 // MockService is a mock of Service interface.
@@ -63,6 +65,22 @@ func (m *MockService) Encrypt(arg0 context.Context, arg1 []byte) ([]byte, error)
 func (mr *MockServiceMockRecorder) Encrypt(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Encrypt", reflect.TypeOf((*MockService)(nil).Encrypt), arg0, arg1)
+}
+
+// ExportKey mocks base method.
+func (m *MockService) ExportKey(arg0 context.Context) (kms.KeyType, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportKey", arg0)
+	ret0, _ := ret[0].(kms.KeyType)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ExportKey indicates an expected call of ExportKey.
+func (mr *MockServiceMockRecorder) ExportKey(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportKey", reflect.TypeOf((*MockService)(nil).ExportKey), arg0)
 }
 
 // PublicKey mocks base method.

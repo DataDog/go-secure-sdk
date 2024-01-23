@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"crypto/sha512"
 	"fmt"
-	"io"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -45,11 +44,4 @@ func ExampleCryptoSeed() {
 
 	// Generate a random number between 0 and 99
 	prng.Intn(100)
-}
-
-func ExampleReader() {
-	// This will generate 32 bytes using the PRNG initialized with the CSPRNG.
-	if _, err := io.Copy(io.Discard, io.LimitReader(Reader, 32)); err != nil {
-		panic(err)
-	}
 }

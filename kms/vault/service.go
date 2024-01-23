@@ -15,6 +15,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/mitchellh/mapstructure"
@@ -35,6 +36,8 @@ type service struct {
 	canSign              bool
 	canEncrypt           bool
 	canDecrypt           bool
+	canExport            bool
+	autoRotationPeriod   time.Duration
 
 	mu sync.RWMutex
 }
@@ -98,6 +101,9 @@ func (s *service) Encrypt(ctx context.Context, cleartext []byte) ([]byte, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to encrypt with '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
 	}
+	if secret == nil {
+		return nil, fmt.Errorf("unable to encrypt with '%s:v%d' key: nil response", s.keyName, s.lastVersion)
+	}
 
 	// Parse server response.
 	if cipherText, ok := secret.Data["ciphertext"].(string); ok && cipherText != "" {
@@ -135,6 +141,9 @@ func (s *service) Decrypt(ctx context.Context, ciphertext []byte) ([]byte, error
 	secret, err := s.logical.WriteWithContext(ctx, decryptPath, data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decrypt with '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
+	}
+	if secret == nil {
+		return nil, fmt.Errorf("unable to decrypt with '%s:v%d' key: nil response", s.keyName, s.lastVersion)
 	}
 
 	// Parse server response.
@@ -179,6 +188,9 @@ func (s *service) Sign(ctx context.Context, protected []byte) ([]byte, error) {
 	secret, err := s.logical.WriteWithContext(ctx, signPath, data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to sign with '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
+	}
+	if secret == nil {
+		return nil, fmt.Errorf("unable to sign with '%s:v%d' key: nil response", s.keyName, s.lastVersion)
 	}
 
 	// Parse server response.
@@ -236,6 +248,9 @@ func (s *service) Verify(ctx context.Context, protected, signature []byte) error
 	if err != nil {
 		return fmt.Errorf("unable to verify with '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
 	}
+	if response == nil {
+		return fmt.Errorf("unable to verify with '%s:v%d' key: nil response", s.keyName, s.lastVersion)
+	}
 
 	// Parse server response.
 	batchResults := struct {
@@ -262,8 +277,10 @@ func (s *service) PublicKey(_ context.Context) (crypto.PublicKey, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.keyType == kms.KeyTypeSymmetric {
-		return nil, errors.New("the key doesn't have a public key")
+	switch s.keyType {
+	case kms.KeyTypeSymmetric, kms.KeyTypeHMAC:
+		return nil, errors.New("the key doesn't have a public keys")
+	default:
 	}
 
 	return s.publicKeys[s.lastVersion], nil
@@ -273,8 +290,10 @@ func (s *service) VerificationPublicKeys(_ context.Context) ([]crypto.PublicKey,
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.keyType == kms.KeyTypeSymmetric {
+	switch s.keyType {
+	case kms.KeyTypeSymmetric, kms.KeyTypeHMAC:
 		return nil, errors.New("the key doesn't have a public keys")
+	default:
 	}
 
 	var result []crypto.PublicKey
@@ -288,9 +307,6 @@ func (s *service) VerificationPublicKeys(_ context.Context) ([]crypto.PublicKey,
 }
 
 func (s *service) RotateKey(ctx context.Context) error {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	// Prepare query
 	rotatePath := sanitizePath(path.Join(url.PathEscape(s.mountPath), "keys", url.PathEscape(s.keyName), "rotate"))
 
@@ -299,9 +315,65 @@ func (s *service) RotateKey(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("unable to rotate '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
 	}
+	if response == nil {
+		return fmt.Errorf("unable to rotate '%s:v%d' key: nil response", s.keyName, s.lastVersion)
+	}
 
 	// Refresh key information.
-	return s.decodeKeyInformation(response)
+	return s.resolveKeyCapabilities(ctx)
+}
+
+func (s *service) ExportKey(ctx context.Context) (kms.KeyType, string, error) {
+	// Check arguments
+	if !s.canExport {
+		return kms.KeyTypeUnknown, "", errors.New("export operation is not supported by the key")
+	}
+
+	// Retrieve the Vault key type.
+	keyTypePath := ""
+	switch s.keyType {
+	case kms.KeyTypeECDSA, kms.KeyTypeRSA, kms.KeyTypeEd25519:
+		keyTypePath = "signing-key"
+	case kms.KeyTypeHMAC:
+		keyTypePath = "hmac-key"
+	case kms.KeyTypeSymmetric:
+		keyTypePath = "encryption-key"
+	default:
+		return kms.KeyTypeUnknown, "", errors.New("key type is not mapped to vault")
+	}
+
+	// Prepare query
+	rotatePath := sanitizePath(path.Join(url.PathEscape(s.mountPath), "export", keyTypePath, url.PathEscape(s.keyName), fmt.Sprintf("/%d", s.lastVersion)))
+
+	// Send to Vault.
+	response, err := s.logical.ReadWithContext(ctx, rotatePath)
+	if err != nil {
+		return kms.KeyTypeUnknown, "", fmt.Errorf("unable to export '%s:v%d' key: %w", s.keyName, s.lastVersion, err)
+	}
+	if response == nil {
+		return kms.KeyTypeUnknown, "", fmt.Errorf("unable to export '%s:v%d' key: nil response", s.keyName, s.lastVersion)
+	}
+
+	// Decode response information
+	keyExport := struct {
+		Name string            `mapstructure:"name"`
+		Keys map[string]string `mapstructure:"keys"`
+	}{}
+	if errKi := mapstructure.WeakDecode(response.Data, &keyExport); errKi != nil {
+		return kms.KeyTypeUnknown, "", fmt.Errorf("unable to decode %q key export response: %w", s.keyName, errKi)
+	}
+
+	// Ensure correct response.
+	switch {
+	case keyExport.Name != s.keyName:
+		return kms.KeyTypeUnknown, "", fmt.Errorf("invalid response from Vault, got a different key related response (expected %q, got %q)", s.keyName, keyExport.Name)
+	case len(keyExport.Keys) == 0:
+		return kms.KeyTypeUnknown, "", fmt.Errorf("invalid response from Vault, got a empty key for %q", s.keyName)
+	case len(keyExport.Keys) > 1:
+		return kms.KeyTypeUnknown, "", fmt.Errorf("invalid response from Vault, got a more keys than expected for %q", s.keyName)
+	}
+
+	return s.keyType, keyExport.Keys[fmt.Sprintf("%d", s.lastVersion)], nil
 }
 
 // -----------------------------------------------------------------------------
@@ -312,8 +384,11 @@ func (s *service) resolveKeyCapabilities(ctx context.Context) error {
 
 	// Send to Vault.
 	response, err := s.logical.ReadWithContext(ctx, keyPath)
-	if response == nil || err != nil {
-		return fmt.Errorf("unable to retrieve key information with '%s' key: %w", s.keyName, err)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve key information with %q key: %w", s.keyName, err)
+	}
+	if response == nil {
+		return fmt.Errorf("unable to retrieve key information with %q key: nil response", s.keyName)
 	}
 
 	return s.decodeKeyInformation(response)
@@ -333,6 +408,8 @@ func (s *service) decodeKeyInformation(response *api.Secret) error {
 		SupportsSigning      bool        `mapstructure:"supports_signing"`
 		SupportsEncryption   bool        `mapstructure:"supports_encryption"`
 		SupportsDecryption   bool        `mapstructure:"supports_decryption"`
+		Exportable           bool        `mapstructure:"exportable"`
+		AutoRotatePeriod     uint64      `mapstructure:"auto_rotate_period"`
 	}{}
 	if errKi := mapstructure.WeakDecode(response.Data, &keyInfo); errKi != nil {
 		return fmt.Errorf("unable to decode '%s' key information: %w", s.keyName, errKi)
@@ -340,8 +417,10 @@ func (s *service) decodeKeyInformation(response *api.Secret) error {
 
 	// Add local keytype
 	switch keyInfo.KeyType {
-	case "aes128-gcm96", "aes256-gcm96", "chacha20-poly1305", "hmac":
+	case "aes128-gcm96", "aes256-gcm96", "chacha20-poly1305":
 		s.keyType = kms.KeyTypeSymmetric
+	case "hmac":
+		s.keyType = kms.KeyTypeHMAC
 	case "rsa-2048", "rsa-3072", "rsa-4096":
 		s.keyType = kms.KeyTypeRSA
 	case "ecdsa-p256", "ecdsa-p384", "ecdsa-p521":
@@ -353,7 +432,7 @@ func (s *service) decodeKeyInformation(response *api.Secret) error {
 	}
 
 	// Preload the public key for asymmetric keys.
-	if s.keyType != kms.KeyTypeSymmetric {
+	if s.keyType != kms.KeyTypeSymmetric && s.keyType != kms.KeyTypeHMAC {
 		// Extract public key
 		publicKeyInfo := map[int]struct {
 			PublicKey string `mapstructure:"public_key"`
@@ -390,6 +469,8 @@ func (s *service) decodeKeyInformation(response *api.Secret) error {
 	s.canDecrypt = keyInfo.SupportsDecryption
 	s.canEncrypt = keyInfo.SupportsEncryption
 	s.canSign = keyInfo.SupportsSigning
+	s.canExport = keyInfo.Exportable
+	s.autoRotationPeriod = time.Duration(keyInfo.AutoRotatePeriod) * time.Second
 
 	return nil
 }

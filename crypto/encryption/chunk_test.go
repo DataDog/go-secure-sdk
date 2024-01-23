@@ -2,20 +2,20 @@ package encryption
 
 import (
 	"bytes"
+	"crypto/rand"
 	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/DataDog/go-secure-sdk/crypto/canonicalization"
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 func TestChunked(t *testing.T) {
 	t.Parallel()
 
 	msg := &bytes.Buffer{}
-	_, err := io.Copy(msg, io.LimitReader(randomness.NewReader(1), 1<<20))
+	_, err := io.Copy(msg, io.LimitReader(rand.Reader, 1<<20))
 	require.NoError(t, err)
 
 	t.Run("Key too large", func(t *testing.T) {

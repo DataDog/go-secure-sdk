@@ -16,13 +16,19 @@ Decryptor describes decryption operations contract.
 
 Encryptor describes encryption operations contract.
 
+### type [KeyExporter](api.go#L44)
+
+`type KeyExporter interface { ... }`
+
+KeyExporter represents secret key exporter contract.
+
 ### type [KeyRotator](api.go#L29)
 
 `type KeyRotator interface { ... }`
 
 KeyRotator represents key rotation operations contract.
 
-### type [KeyType](api.go#L57)
+### type [KeyType](api.go#L63)
 
 `type KeyType int`
 
@@ -32,10 +38,12 @@ KeyType represents the type of the key
 
 ```golang
 const (
-    KeyTypeSymmetric KeyType = iota
+    KeyTypeUnknown KeyType = iota
+    KeyTypeSymmetric
     KeyTypeRSA
     KeyTypeEd25519
     KeyTypeECDSA
+    KeyTypeHMAC
 )
 ```
 
@@ -45,7 +53,7 @@ const (
 
 PublicKeyExporter represents public key operations contract.
 
-### type [Service](api.go#L46)
+### type [Service](api.go#L51)
 
 `type Service interface { ... }`
 

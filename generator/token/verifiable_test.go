@@ -1,13 +1,14 @@
 package token
 
 import (
+	"crypto/sha256"
 	"hash/crc32"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
+	"golang.org/x/crypto/hkdf"
 )
 
 //nolint:paralleltest // Stateful tests
@@ -15,32 +16,32 @@ func Test_Verifiable_Generate(t *testing.T) {
 	// Create a deterministic generator
 	g := &verifiableRandomGenerator{
 		crcTable:   crc32.MakeTable(crc32.Castagnoli),
-		randReader: randomness.NewReader(1),
+		randReader: hkdf.Expand(sha256.New, []byte("deterministic-nonce-entropy-source-for-testing-purpose"), nil),
 	}
 
 	t.Run("first generation", func(t *testing.T) {
-		expectedOut := "0fgtBl7KBXi2fKEqSuFwPPKLVADLPR1sYE0V"
+		expectedOut := "0mXKyMzaQg1hGQOJ08IwFYeYLD2X9bHKrI72"
 		out, err := g.Generate()
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("second generation", func(t *testing.T) {
-		expectedOut := "0mRBe1u79hWstuVm4nlYkcJEtL9ezPTwuWD5"
+		expectedOut := "0zvIoLTRwWmFKoSTC9ezsdFU7CspIj1TldBF"
 		out, err := g.Generate()
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("first generation with prefix", func(t *testing.T) {
-		expectedOut := "et_048isDkIG01Tql4LE7zhz9uVt9tG19Kz9OwF"
+		expectedOut := "et_0AyGfwqbfzK3hOtITjXP3kbQAMRES7AeeF4i"
 		out, err := g.Generate(WithTokenPrefix("et"))
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
 	})
 
 	t.Run("second generation with prefix", func(t *testing.T) {
-		expectedOut := "et_04x1wxPmR3iL5QDLrLbSbYfxa3Zv0hm6oVkT"
+		expectedOut := "et_0E2blUMHAWuOmLziT2qpGkWJq0Eq2HnA01As"
 		out, err := g.Generate(WithTokenPrefix("et"))
 		require.NoError(t, err)
 		require.Equal(t, expectedOut, out)
@@ -63,7 +64,7 @@ func Test_Verifiable_Verify(t *testing.T) {
 	// Create a deterministic generator
 	g := &verifiableRandomGenerator{
 		crcTable:   crc32.MakeTable(crc32.Castagnoli),
-		randReader: randomness.NewReader(1),
+		randReader: hkdf.Expand(sha256.New, []byte("deterministic-nonce-entropy-source-for-testing-purpose"), nil),
 	}
 
 	t.Run("valid", func(t *testing.T) {

@@ -35,20 +35,20 @@ var ErrInvalidEnvelope = errors.New("invalid envelope")
 VerifyAndUnwrap verifies the envelope signature and return the verified content.
 
 ```golang
-// Generate deterministic key pair for demonstration purpose
-pub, _, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+// Load the public key from the given base64 encoded string
+pubJWK, err := keyutil.FromJWK(strings.NewReader(`{"kty":"OKP","kid":"BVGkvDe0tG_SGH4EkRx-lDTEMcDbP6Y-_JLLqBzSEw0","crv":"Ed25519","x":"leArIm2WeysClgk454i4u7pLn-vYQxBTjEpX1FDk1pk"}`))
 if err != nil {
     panic(err)
 }
 
 // Create a verifier instance from the given crypto material
-verifier, err := signature.FromPublicKey(pub)
+verifier, err := signature.FromPublicKey(pubJWK.Key)
 if err != nil {
     panic(err)
 }
 
 // Received envelope
-envelopeRaw := `{"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"sxmBbwylYhmtvtAyIuvPmjNncvJCxBmZeNBD4bnS17avg2nAueHg1hStwrjzErqU5Mr4qpWGKGKH8+dUbhyQBQ=="}}`
+envelopeRaw := `{"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"IjPJBzTlkRaA2fyfuHef6RuwQ82WbWHZcNugJUhNXSA=","timestamp":1670850610,"proof":"GQsw4q/OlQ4oZ4ZgseNsOgE2EbtH+G66yRgXvdwBLHQTA5lceZTP7OsK7i3zJz9gOFQdfro8L8oMvI90kuIyAQ=="}}`
 
 // Try to deocde the envelope
 var envelope Envelope
@@ -89,14 +89,15 @@ Envelope describes the final assembled message
 WrapAndSign wraps the input payload in a given envelope and sign the content.
 
 ```golang
+
 // Generate deterministic key pair for demonstration purpose
-_, pk, err := ed25519.GenerateKey(randomness.NewLockedRand(1))
+_, pk, err := keyutil.GenerateKeyPair(keyutil.ED25519)
 if err != nil {
     panic(err)
 }
 
 // Create a signer instance from the given crypto material
-signer, err := signature.FromPrivateKey(pk)
+signer, err := signature.FromPrivateKey(pk.(crypto.Signer))
 if err != nil {
     panic(err)
 }
@@ -126,12 +127,13 @@ envelope, err := WrapAndSign(
 if err != nil {
     panic(err)
 }
-```
 
- Output:
+// Sample Output:
+// {"content_type":"types.datadoghq.com/v1/AppInfo","content":"CihiMGE0Y2ZjOWZkMjEyNTJlYWY1ZTIwOTNiNzA4OGQ1MjI4ZWIyYjQ3EgRtYWluGhQyMDIyLTEyLTEyVDEzOjU3OjMyWiIEMS4yMCoGdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"sxmBbwylYhmtvtAyIuvPmjNncvJCxBmZeNBD4bnS17avg2nAueHg1hStwrjzErqU5Mr4qpWGKGKH8+dUbhyQBQ=="}}
+if err := json.NewEncoder(os.Stdout).Encode(envelope); err != nil {
+    panic(err)
+}
 
-```
-{"content_type":"types.datadoghq.com/v1/AppInfo","content":"hXgoYjBhNGNmYzlmZDIxMjUyZWFmNWUyMDkzYjcwODhkNTIyOGViMmI0N2RtYWludDIwMjItMTItMTJUMTM6NTc6MzJaZDEuMjBmdjEuMC4y","signature":{"version":2,"algorithm":"ed25519","pubkey":"Fx5o8C5vZr+f9lwTx12bK0ksL0DtYeBlB8uLInw5cNU=","timestamp":1670850610,"proof":"lQ+1B6mbw3UfIlCEGzfTCepGtlyjhtXe2hejZbyz8yPgiNK3+s51AJHRdIlHitcjuHzyevzTD8kU+NXdLSn7BQ=="}}
 ```
 
 ### type [Option](options.go#L4)

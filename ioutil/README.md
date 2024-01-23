@@ -66,7 +66,7 @@ out := bytes.Buffer{}
 lw := LimitWriter(&out, 1024)
 
 // Copy data from the reader
-_, err := io.CopyN(lw, randomness.Reader, 2048)
+_, err := io.CopyN(lw, rand.Reader, 2048)
 if err != nil {
     panic(err)
 }

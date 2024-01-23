@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/DataDog/go-secure-sdk/generator/randomness"
 )
 
 var (
@@ -205,7 +205,7 @@ func TestFromPEM(t *testing.T) {
 	t.Run("too large content", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := FromPEM(randomness.NewReader(1))
+		_, err := FromPEM(io.LimitReader(rand.Reader, maxPEMLength+1))
 		require.Error(t, err)
 	})
 
@@ -269,6 +269,7 @@ func TestToCabinPEM(t *testing.T) {
 
 	password := []byte("0123456789012345")
 	block, _ := pem.Decode([]byte(rsaKeyPEM))
+	require.NotNil(t, block)
 	pkRaw, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	require.NoError(t, err)
 	require.IsType(t, &rsa.PrivateKey{}, pkRaw)
@@ -329,7 +330,7 @@ func TestFromCabinPEM(t *testing.T) {
 	t.Run("too large content", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := FromCabinPEM(randomness.NewReader(1), password)
+		_, err := FromCabinPEM(io.LimitReader(rand.Reader, maxPEMLength+1), password)
 		require.Error(t, err)
 	})
 

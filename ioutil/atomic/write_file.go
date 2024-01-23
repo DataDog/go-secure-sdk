@@ -38,7 +38,7 @@ func WriteFile(filename string, r io.Reader) (err error) {
 		// Close the temporary file
 		if err := closer.Close(); err != nil {
 			if !errors.Is(err, fs.ErrClosed) {
-				slog.Error("unable to successfully close the file handler", "err", err, "file", f.Name())
+				slog.Error("unable to close temporary file", "err", err, "file", f.Name())
 			}
 		}
 	}(f)
