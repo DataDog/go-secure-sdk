@@ -11,7 +11,7 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/hashicorp/vault/api v1.10.0
+	github.com/hashicorp/vault/api v1.11.0
 	github.com/lestrrat-go/jwx/v2 v2.0.19
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/open-policy-agent/opa v0.60.0
@@ -35,7 +35,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dunglas/httpsfv v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
