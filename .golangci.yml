@@ -1,0 +1,101 @@
+run:
+  timeout: 10m
+  modules-download-mode: readonly
+  tests: false
+  skip-files:
+    - "testing.go"
+    - ".*\\.pb\\.go"
+    - ".*\\.gen\\.go"
+
+linters-settings:
+  golint:
+    min-confidence: 0
+  goconst:
+    min-len: 5
+    min-occurrences: 4
+  misspell:
+    locale: US
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "io/ioutil"
+            desc: "ioutil is deprecated starting with Go 1.16"
+  revive:
+    # Specifying any rule explicitly will disable the default-enabled rules.
+    # Manually specify the defaults along with `context-as-argument`.
+    rules:
+      - name: blank-imports
+        disabled: false
+      - name: context-as-argument
+        arguments:
+          # The context should always be first, except in our testing packages.
+          allowTypesBefore: "*testing.T,*testing.B,testing.TB"
+      - name: dot-imports
+        disabled: false
+      - name: error-naming
+        disabled: false
+      - name: error-return
+        disabled: false
+      - name: error-strings
+        disabled: false
+      - name: exported
+        disabled: false
+      - name: increment-decrement
+        disabled: false
+      - name: indent-error-flow
+        disabled: false
+      - name: receiver-naming
+        disabled: false
+      - name: range
+        disabled: false
+      - name: var-naming
+        disabled: false
+  stylecheck:
+    # ST1000 checks for missing package comments. We don't use these for most
+    # packages, so let's disable this check.
+    checks: [ "all", "-ST1000" ]
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - bidichk
+    - depguard
+    - dogsled
+    - errcheck
+    - exhaustive
+    - exportloopref
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - gofumpt
+    - goimports
+    - revive
+    - gomodguard
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - exportloopref
+    - staticcheck
+    - unused
+    - stylecheck
+    - tenv
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+    - whitespace

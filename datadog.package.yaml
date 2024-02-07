@@ -1,0 +1,6 @@
+schema-version: v1
+dd-package: "go-secure-sdk"
+repos:
+  - name: Source
+    provider: GitHub
+    url: https://github.com/DataDog/go-secure-sdk/tree/main
