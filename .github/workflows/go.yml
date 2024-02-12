@@ -1,0 +1,201 @@
+name: Go
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+    paths:
+      - ".golangci.yml"
+      - ".goreleaser.yaml"
+      - "**.go"
+      - ".github/workflows/go.yml"
+  pull_request:
+    paths:
+      - ".golangci.yml"
+      - ".goreleaser.yaml"
+      - "**.go"
+      - ".github/workflows/go.yml"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Check if there any dirty change for go mod tidy
+  go-mod:
+    name: "Check go modules declaration"
+    runs-on: ubuntu-latest
+    permissions:
+        actions: write
+    steps:
+      -
+        name: Cancel previous workflows
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Install Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: "1.22"
+      -
+        name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      -
+        name: Check go mod and go.sum
+        run: |
+          go mod tidy -v
+          git --no-pager diff go.mod go.sum
+          git --no-pager diff --quiet go.mod go.sum
+
+  # Run golangci-lint
+  golangci-lint:
+    name: "GolangCI-lint"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      -
+        name: Cancel previous workflows
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Install Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: '1.22'
+      -
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      -
+        name: Lint code
+        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
+        with:
+          version: v1.55.2
+          working-directory: .
+          only-new-issues: false
+          args: --timeout=10m
+
+  tests-on-linux:
+    name: "Tests (linux)"
+    needs: [go-mod, golangci-lint] # run after golangci-lint action to not produce duplicated errors
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      -
+        name: Cancel previous workflows
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      -
+        name: Install Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: '1.22' # test only the latest go version to speed up CI
+      -
+        name: Cache Go modules
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      -
+        name: Fetch dependencies
+        run: go mod download
+      -
+        name: Setup gotestsum
+        uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
+        with:
+          gotestsum_version: '1.11.0'
+      -
+        name: Run tests
+        run: gotestsum --format short-verbose ./...
+
+  tests-on-windows:
+    name: "Tests (windows)"
+    needs: [go-mod, golangci-lint] # run after golangci-lint action to not produce duplicated errors
+    runs-on: windows-latest
+    permissions:
+      actions: write
+    steps:
+      -
+        name: Cancel previous workflows
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      -
+        name: Install Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: '1.22' # test only the latest go version to speed up CI
+      -
+        name: Cache Go modules
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      -
+        name: Fetch dependencies
+        run: go mod download
+      -
+        name: Setup gotestsum
+        uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
+        with:
+          gotestsum_version: '1.11.0'
+      -
+        name: Run tests
+        run: gotestsum --format short-verbose ./...
+
+  tests-on-macos:
+    name: "Tests (darwin)"
+    needs: [go-mod, golangci-lint] # run after golangci-lint action to not produce duplicated errors
+    runs-on: macos-latest
+    permissions:
+      actions: write
+    steps:
+      -
+        name: Cancel previous workflows
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      -
+        name: Install Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: '1.22' # test only the latest go version to speed up CI
+      -
+        name: Cache Go modules
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      -
+        name: Fetch dependencies
+        run: go mod download
+      -
+        name: Setup gotestsum
+        uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
+        with:
+          gotestsum_version: '1.11.0'
+      -
+        name: Run tests
+        run: gotestsum --format short-verbose ./...

@@ -1,0 +1,8 @@
+// SPDX-FileCopyrightText: 2024-Present Datadog, Inc
+// SPDX-License-Identifier: Apache-2.0
+
+// Package tar provides TAR archive management functions
+//
+// This package with hardened controls to protect the caller from various attack
+// related to insecure compression management.
+package tar
