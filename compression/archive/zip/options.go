@@ -10,17 +10,17 @@ import (
 )
 
 type options struct {
-	CompressionLevel           int
-	MaxArchiveSize             uint64
-	MaxEntryCount              uint64
-	MaxFileSize                uint64
-	IncludeFilter              FileInfoFilterFunc
-	ExcludeFilter              FileInfoFilterFunc
-	CompressFilter             FileInfoFilterFunc
-	OverwriteFilter            FileInfoFilterFunc
-	AddEmptyDirectories        bool
-	HeaderRewritter            HeaderProcessorFunc
-	DisableFileSizeCheck       bool
+	CompressionLevel     int
+	MaxArchiveSize       uint64
+	MaxEntryCount        uint64
+	MaxFileSize          uint64
+	IncludeFilter        FileInfoFilterFunc
+	ExcludeFilter        FileInfoFilterFunc
+	CompressFilter       FileInfoFilterFunc
+	OverwriteFilter      FileInfoFilterFunc
+	AddEmptyDirectories  bool
+	HeaderRewritter      HeaderProcessorFunc
+	DisableFileSizeCheck bool
 }
 
 // Option declares operation functional option.

@@ -34,9 +34,9 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 
 	// Apply default options
 	dopts := &options{
-		MaxArchiveSize:             defaultMaxArchiveSize,
-		MaxFileSize:                defaultMaxFileSize,
-		MaxEntryCount:              defaultMaxEntryCount,
+		MaxArchiveSize: defaultMaxArchiveSize,
+		MaxFileSize:    defaultMaxFileSize,
+		MaxEntryCount:  defaultMaxEntryCount,
 	}
 	for _, o := range opts {
 		o(dopts)
