@@ -30,6 +30,13 @@ type FileInfoFilterFunc func(path string, fi fs.FileInfo) bool
 // HeaderProcessorFunc declares the function type used to pre-process Tar item headers.
 type HeaderProcessorFunc func(hdr *tar.Header) *tar.Header
 
+// WithMaxArchiveSize overrides the default maximum archive size.
+func WithMaxArchiveSize(value uint64) Option {
+	return func(o *options) {
+		o.MaxArchiveSize = value
+	}
+}
+
 // WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 func WithMaxEntryCount(value uint64) Option {
 	return func(o *options) {

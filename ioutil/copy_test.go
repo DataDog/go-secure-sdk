@@ -6,6 +6,7 @@ package ioutil
 import (
 	"errors"
 	"io"
+	"os"
 	"testing"
 )
 
@@ -115,5 +116,23 @@ func TestLimitCopy(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+func TestLimitCopy_earlyCheck(t *testing.T) {
+	t.Parallel()
+
+	r := &zeroReader{}
+	w := io.Discard
+
+	pageSize := os.Getpagesize()
+
+	// Run the LimitCopy function with a maximum size limit of 1024 byte.
+	n, err := LimitCopy(w, r, uint64(pageSize)*2+1)
+	if err == nil {
+		t.Error("LimitCopy() error = nil, wantErr true")
+	}
+	if n != uint64(pageSize)*3 {
+		t.Errorf("LimitCopy() n = %v, want %v", n, pageSize)
 	}
 }

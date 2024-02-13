@@ -43,11 +43,12 @@ func LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (uint64, error) {
 
 		// Add to length
 		writtenLength += uint64(written)
-	}
 
-	// Check max size
-	if writtenLength > maxSize {
-		return writtenLength, ErrTruncatedCopy
+		// Early check max size limit and raise error if needed to prevent
+		// resource exhaustion.
+		if writtenLength > maxSize {
+			return writtenLength, ErrTruncatedCopy
+		}
 	}
 
 	// No error

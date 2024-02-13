@@ -1,3 +1,20 @@
+## 0.0.3
+
+### 2024-02-13
+
+FEATURES:
+
+* `archive/tar`
+  * Default archive size increased to `1GB`
+  * Default archive file size increased to `250MB`
+  * Add missing option `WithMaxArchiveSize` to set the maximum archive file size
+    that the extraction can accept.
+* `archive/zip`
+  * Add missing option `WithMaxArchiveSize` to set the maximum archive file size
+    that the extraction can accept.
+* `ioutil`
+  * Improve early detection for threshold crossing for `LimitCopy`.
+
 ## 0.0.2
 
 ### 2024-02-13
