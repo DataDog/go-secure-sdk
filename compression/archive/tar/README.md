@@ -161,7 +161,7 @@ based on the path and the associated file information.
 
 HeaderProcessorFunc declares the function type used to pre-process Tar item headers.
 
-#### func [ResetHeaderTimes](options.go#L89)
+#### func [ResetHeaderTimes](options.go#L96)
 
 `func ResetHeaderTimes() HeaderProcessorFunc`
 
@@ -174,45 +174,51 @@ Useful to get deterministic output.
 
 Option declares operation functional option.
 
-#### func [WithEmptyDirectories](options.go#L72)
+#### func [WithEmptyDirectories](options.go#L79)
 
 `func WithEmptyDirectories(value bool) Option`
 
 WithEmptyDirectories sets a flag to add directories during compression.
 
-#### func [WithExcludeFilter](options.go#L57)
+#### func [WithExcludeFilter](options.go#L64)
 
 `func WithExcludeFilter(value FileInfoFilterFunc) Option`
 
 WithExcludeFilter defines the function used to determine if an item should
 be excluded from the archive.
 
-#### func [WithHeaderRewritterFunc](options.go#L79)
+#### func [WithHeaderRewritterFunc](options.go#L86)
 
 `func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option`
 
 WithHeaderRewritterFunc sets the Tar item header rewritter interceptor.
 
-#### func [WithIncludeFilter](options.go#L49)
+#### func [WithIncludeFilter](options.go#L56)
 
 `func WithIncludeFilter(value FileInfoFilterFunc) Option`
 
 WithIncludeFilter defines the function used to determine if an item should
 be included in the archive.
 
-#### func [WithMaxEntryCount](options.go#L34)
+#### func [WithMaxArchiveSize](options.go#L34)
+
+`func WithMaxArchiveSize(value uint64) Option`
+
+WithMaxArchiveSize overrides the default maximum archive size.
+
+#### func [WithMaxEntryCount](options.go#L41)
 
 `func WithMaxEntryCount(value uint64) Option`
 
 WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 
-#### func [WithMaxFileSize](options.go#L41)
+#### func [WithMaxFileSize](options.go#L48)
 
 `func WithMaxFileSize(value uint64) Option`
 
 WithMaxFileSize overrides the default maximum file size for compression.
 
-#### func [WithOverwriteFilter](options.go#L65)
+#### func [WithOverwriteFilter](options.go#L72)
 
 `func WithOverwriteFilter(value FileInfoFilterFunc) Option`
 

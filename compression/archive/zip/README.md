@@ -168,7 +168,7 @@ based on the path and the associated file information.
 
 HeaderProcessorFunc declares the function type used to pre-process ZIP item headers.
 
-#### func [ResetHeaderTimes](options.go#L115)
+#### func [ResetHeaderTimes](options.go#L122)
 
 `func ResetHeaderTimes() HeaderProcessorFunc`
 
@@ -181,7 +181,7 @@ Useful to get deterministic output.
 
 Option declares operation functional option.
 
-#### func [WithCompressFilter](options.go#L75)
+#### func [WithCompressFilter](options.go#L82)
 
 `func WithCompressFilter(value FileInfoFilterFunc) Option`
 
@@ -194,52 +194,58 @@ be compressed into the archive.
 
 WithCompressionLevel defines the compression level used during the compression.
 
-#### func [WithDisableFileSizeCheck](options.go#L105)
+#### func [WithDisableFileSizeCheck](options.go#L112)
 
 `func WithDisableFileSizeCheck(value bool) Option`
 
 WithDisableFileSizeCheck sets a flag to disable the file size check during
 decompression.
 
-#### func [WithEmptyDirectories](options.go#L90)
+#### func [WithEmptyDirectories](options.go#L97)
 
 `func WithEmptyDirectories(value bool) Option`
 
 WithEmptyDirectories sets a flag to add directories during compression.
 
-#### func [WithExcludeFilter](options.go#L67)
+#### func [WithExcludeFilter](options.go#L74)
 
 `func WithExcludeFilter(value FileInfoFilterFunc) Option`
 
 WithExcludeFilter defines the function used to determine if an item should
 be excluded from the archive.
 
-#### func [WithHeaderRewritterFunc](options.go#L97)
+#### func [WithHeaderRewritterFunc](options.go#L104)
 
 `func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option`
 
 WithHeaderRewritterFunc sets the Tar item header rewritter interceptor.
 
-#### func [WithIncludeFilter](options.go#L59)
+#### func [WithIncludeFilter](options.go#L66)
 
 `func WithIncludeFilter(value FileInfoFilterFunc) Option`
 
 WithIncludeFilter defines the function used to determine if an item should
 be included in the archive.
 
-#### func [WithMaxEntryCount](options.go#L44)
+#### func [WithMaxArchiveSize](options.go#L44)
+
+`func WithMaxArchiveSize(value uint64) Option`
+
+WithMaxArchiveSize overrides the default maximum archive size.
+
+#### func [WithMaxEntryCount](options.go#L51)
 
 `func WithMaxEntryCount(value uint64) Option`
 
 WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 
-#### func [WithMaxFileSize](options.go#L51)
+#### func [WithMaxFileSize](options.go#L58)
 
 `func WithMaxFileSize(value uint64) Option`
 
 WithMaxFileSize overrides the default maximum file size for compression.
 
-#### func [WithOverwriteFilter](options.go#L83)
+#### func [WithOverwriteFilter](options.go#L90)
 
 `func WithOverwriteFilter(value FileInfoFilterFunc) Option`
 
