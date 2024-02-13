@@ -1,6 +1,6 @@
 # compression
 
-Package compression provides harded compression related features.
+Package compression provides hardened compression related features.
 
 ## Sub Packages
 

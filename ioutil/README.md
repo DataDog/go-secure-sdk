@@ -19,7 +19,7 @@ var ErrTruncatedCopy = errors.New("truncated copy due to too large input")
 
 ## Functions
 
-### func [LimitCopy](copy.go#L16)
+### func [LimitCopy](copy.go#L19)
 
 `func LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (uint64, error)`
 
@@ -55,7 +55,7 @@ _, err = LimitCopy(io.Discard, gzr, 1024)
 truncated copy due to too large input
 ```
 
-### func [LimitWriter](limit_writer.go#L17)
+### func [LimitWriter](limit_writer.go#L20)
 
 `func LimitWriter(w io.Writer, limit int) io.Writer`
 
@@ -78,7 +78,7 @@ if err != nil {
 1024
 ```
 
-### func [TimeoutReader](timeout.go#L22)
+### func [TimeoutReader](timeout.go#L25)
 
 `func TimeoutReader(reader io.Reader, timeout time.Duration) io.Reader`
 
@@ -101,8 +101,4 @@ _, err := io.Copy(io.Discard, tr)
 ```
 reader timed out
 ```
-
-## Sub Packages
-
-* [atomic](./atomic): Package atomic provides atomic-level operations.
 

@@ -4,7 +4,7 @@ Package hashutil provides secured cryptographic hash functions
 
 ## Functions
 
-### func [FileHash](file.go#L14)
+### func [FileHash](file.go#L17)
 
 `func FileHash(root fs.FS, name string, hf crypto.Hash) ([]byte, error)`
 
@@ -28,7 +28,7 @@ if err != nil {
 ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 ```
 
-### func [FileHashes](file.go#L56)
+### func [FileHashes](file.go#L59)
 
 `func FileHashes(root fs.FS, name string, hbs ...crypto.Hash) (map[crypto.Hash][]byte, error)`
 
@@ -77,7 +77,7 @@ SHA3-384 => ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d8
 SHA3-512 => b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0
 ```
 
-### func [Hash](reader.go#L15)
+### func [Hash](reader.go#L18)
 
 `func Hash(r io.Reader, hf crypto.Hash) ([]byte, error)`
 
@@ -98,7 +98,7 @@ if err != nil {
 bf56c0728fd4e9cf64bfaf6dabab81554103298cdee5cc4d580433aa25e98b00
 ```
 
-### func [Hashes](reader.go#L44)
+### func [Hashes](reader.go#L47)
 
 `func Hashes(r io.Reader, hbs ...crypto.Hash) (map[crypto.Hash][]byte, error)`
 

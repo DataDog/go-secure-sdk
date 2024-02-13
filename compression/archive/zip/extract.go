@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,32 +16,6 @@ import (
 	"github.com/DataDog/go-secure-sdk/ioutil"
 	"github.com/DataDog/go-secure-sdk/vfs"
 )
-
-// ErrExpansionExplosion represents the error raised when a file has a suspicious
-// expansion ratio.
-type ErrExpansionExplosion struct {
-	Filename             string
-	MagnitudeOrder       uint64
-	UncompressedFileSize uint64
-	CompressedFileSize   uint64
-}
-
-func (e *ErrExpansionExplosion) Error() string {
-	return fmt.Sprintf("suspicious filebomb identified %q (explosion magnitude order: %d; %d => %d)", e.Filename, e.MagnitudeOrder, e.CompressedFileSize, e.UncompressedFileSize)
-}
-
-// Is implements error comparison for errors.Is usages.
-func (e *ErrExpansionExplosion) Is(err error) bool {
-	other, ok := err.(*ErrExpansionExplosion)
-	if !ok {
-		return false
-	}
-
-	return other.Filename == e.Filename &&
-		other.MagnitudeOrder == e.MagnitudeOrder &&
-		other.CompressedFileSize == e.CompressedFileSize &&
-		other.UncompressedFileSize == e.UncompressedFileSize
-}
 
 // Extract ZIP content from the reader to the given outPath prefix.
 //
@@ -61,10 +34,9 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 
 	// Apply default options
 	dopts := &options{
-		MaxArchiveSize:             defaultMaxArchiveSize,
-		MaxFileSize:                defaultMaxFileSize,
-		MaxEntryCount:              defaultMaxEntryCount,
-		MaxExplosionMagnitudeOrder: defaultMaxExplosionMagnitudeOrder,
+		MaxArchiveSize: defaultMaxArchiveSize,
+		MaxFileSize:    defaultMaxFileSize,
+		MaxEntryCount:  defaultMaxEntryCount,
 	}
 	for _, o := range opts {
 		o(dopts)
@@ -160,35 +132,24 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 				return fmt.Errorf("unable to open compressed file %q: %w", f.Name, err)
 			}
 
-			// Enforce non-0 size to prevent artificial magnitude explosion.
-			if f.UncompressedSize64 > f.CompressedSize64 && size > 0 && archiveFileCount > 0 {
-				// Compute average archive level file expansion ratio
-				avgFileRatio := size / uint64(archiveFileCount)
-				expansionRatio := f.UncompressedSize64 / avgFileRatio
-				// Reduce expansionRatio as a magnitude order based on Log10 to get digits count.
-				// We start at 1 to prevent -Inf when expansionRatio is zero.
-				explosionScore := uint64(math.Ceil(math.Log10(float64(1 + expansionRatio))))
-
-				// Average expansion ratio use more than 3 base10 figures to be expressed (>999%)
-				if explosionScore > dopts.MaxExplosionMagnitudeOrder {
-					return &ErrExpansionExplosion{
-						Filename:             f.Name,
-						MagnitudeOrder:       explosionScore,
-						UncompressedFileSize: f.UncompressedSize64,
-						CompressedFileSize:   f.CompressedSize64,
-					}
-				}
-			}
-
 			// Create file
 			targetFile, err := out.Create(targetPath)
 			if err != nil {
 				return fmt.Errorf("unable to create the output file: %w", err)
 			}
 
+			// Ensure uncompressed size is not too small (header manipulation attack)
+			if !dopts.DisableFileSizeCheck && f.UncompressedSize64 > dopts.MaxFileSize {
+				return fmt.Errorf("file %q is too large to be extracted: %w", f.Name, ErrAbortedOperation)
+			}
+
 			// Use a buffered decompression to the file directly
-			if _, err := ioutil.LimitCopy(targetFile, fileReader, dopts.MaxFileSize); err != nil {
+			n, err := ioutil.LimitCopy(targetFile, fileReader, min(f.UncompressedSize64, dopts.MaxFileSize))
+			if err != nil {
 				return fmt.Errorf("unable to decompress file: %w", err)
+			}
+			if !dopts.DisableFileSizeCheck && n > f.UncompressedSize64 {
+				return fmt.Errorf("file %q has an invalid size (expected:%d actual:%d): %w", f.Name, f.UncompressedSize64, n, ErrAbortedOperation)
 			}
 
 			// Close compressed file

@@ -10,17 +10,17 @@ import (
 )
 
 type options struct {
-	CompressionLevel           int
-	MaxArchiveSize             uint64
-	MaxEntryCount              uint64
-	MaxFileSize                uint64
-	MaxExplosionMagnitudeOrder uint64
-	IncludeFilter              FileInfoFilterFunc
-	ExcludeFilter              FileInfoFilterFunc
-	CompressFilter             FileInfoFilterFunc
-	OverwriteFilter            FileInfoFilterFunc
-	AddEmptyDirectories        bool
-	HeaderRewritter            HeaderProcessorFunc
+	CompressionLevel     int
+	MaxArchiveSize       uint64
+	MaxEntryCount        uint64
+	MaxFileSize          uint64
+	IncludeFilter        FileInfoFilterFunc
+	ExcludeFilter        FileInfoFilterFunc
+	CompressFilter       FileInfoFilterFunc
+	OverwriteFilter      FileInfoFilterFunc
+	AddEmptyDirectories  bool
+	HeaderRewritter      HeaderProcessorFunc
+	DisableFileSizeCheck bool
 }
 
 // Option declares operation functional option.
@@ -51,14 +51,6 @@ func WithMaxEntryCount(value uint64) Option {
 func WithMaxFileSize(value uint64) Option {
 	return func(o *options) {
 		o.MaxFileSize = value
-	}
-}
-
-// WithMaxExplosionMagnitudeOrder overrides the default maximum size explosion
-// magnitude order.
-func WithMaxExplosionMagnitudeOrder(value uint64) Option {
-	return func(o *options) {
-		o.MaxExplosionMagnitudeOrder = value
 	}
 }
 
@@ -105,6 +97,14 @@ func WithEmptyDirectories(value bool) Option {
 func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option {
 	return func(o *options) {
 		o.HeaderRewritter = value
+	}
+}
+
+// WithDisableFileSizeCheck sets a flag to disable the file size check during
+// decompression.
+func WithDisableFileSizeCheck(value bool) Option {
+	return func(o *options) {
+		o.DisableFileSizeCheck = value
 	}
 }
 

@@ -17,7 +17,7 @@ can be found in the LICENSE file in the root of the project.
 
 ## Sub Packages
 
-* [compression](./compression): Package compression provides harded compression related features.
+* [compression](./compression): Package compression provides hardened compression related features.
 
 * [compression/archive](./compression/archive): Package archive provides high level compressed archive management features.
 
