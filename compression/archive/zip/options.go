@@ -40,6 +40,13 @@ func WithCompressionLevel(value int) Option {
 	}
 }
 
+// WithMaxArchiveSize overrides the default maximum archive size.
+func WithMaxArchiveSize(value uint64) Option {
+	return func(o *options) {
+		o.MaxArchiveSize = value
+	}
+}
+
 // WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 func WithMaxEntryCount(value uint64) Option {
 	return func(o *options) {
