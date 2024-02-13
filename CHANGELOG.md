@@ -12,7 +12,7 @@ FEATURES:
 
 * `archive/zip`
   * Default archive size increased to `1GB`
-  * Default archive file fil increased to `250MB`
+  * Default archive file size increased to `250MB`
   * A `UncompressedSize64` check has been added after file content copy to
     lying headers.
   * Added `WithDisableFileSizeCheck` option to disarm the file header size
