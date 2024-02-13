@@ -10,19 +10,20 @@ const (
     Separator = string(filepath.Separator)
     SelfDir   = "."
     ParentDir = ".."
+    FakeRoot  = "/"
 )
 ```
 
 ## Types
 
-### type [ConfirmedDir](confirmeddir.go#L12)
+### type [ConfirmedDir](confirmeddir.go#L15)
 
 `type ConfirmedDir string`
 
 ConfirmedDir is a clean, absolute, delinkified path
 that was confirmed to point to an existing directory.
 
-#### func [ConfirmDir](filesystem.go#L12)
+#### func [ConfirmDir](filesystem.go#L15)
 
 `func ConfirmDir(root FileSystem, path string) (ConfirmedDir, error)`
 
@@ -48,10 +49,10 @@ if err != nil {
  Output:
 
 ```
-.
+/
 ```
 
-#### func [NewTmpConfirmedDir](confirmeddir.go#L17)
+#### func [NewTmpConfirmedDir](confirmeddir.go#L20)
 
 `func NewTmpConfirmedDir() (ConfirmedDir, error)`
 
@@ -80,55 +81,55 @@ isValid := cdir.HasPrefix(ConfirmedDir(cdir1))
 false
 ```
 
-#### func (ConfirmedDir) [HasPrefix](confirmeddir.go#L33)
+#### func (ConfirmedDir) [HasPrefix](confirmeddir.go#L36)
 
 `func (d ConfirmedDir) HasPrefix(path ConfirmedDir) bool`
 
 HasPrefix ensure that the given path has the confirmed directory as prefix.
 
-#### func (ConfirmedDir) [Join](confirmeddir.go#L43)
+#### func (ConfirmedDir) [Join](confirmeddir.go#L48)
 
 `func (d ConfirmedDir) Join(path string) string`
 
 Join the given path to the confirmed directory.
 
-#### func (ConfirmedDir) [String](confirmeddir.go#L47)
+#### func (ConfirmedDir) [String](confirmeddir.go#L52)
 
 `func (d ConfirmedDir) String() string`
 
-### type [ConstraintError](chroot.go#L25)
+### type [ConstraintError](chroot.go#L28)
 
 `type ConstraintError struct { ... }`
 
 ConstraintError records an error and the operation and file that
 violated it.
 
-#### func (*ConstraintError) [Error](chroot.go#L32)
+#### func (*ConstraintError) [Error](chroot.go#L35)
 
 `func (e *ConstraintError) Error() string`
 
 Error returns the formatted error string for the ConstraintError.
 
-#### func (*ConstraintError) [Unwrap](chroot.go#L37)
+#### func (*ConstraintError) [Unwrap](chroot.go#L40)
 
 `func (e *ConstraintError) Unwrap() error`
 
 Unwrap implements error unwrapping.
 
-### type [File](api.go#L16)
+### type [File](api.go#L20)
 
 `type File interface { ... }`
 
 File represents the file writer interface.
 
-### type [FileSystem](api.go#L23)
+### type [FileSystem](api.go#L27)
 
 `type FileSystem interface { ... }`
 
 FileSystem extends the default read-only filesystem abstraction to add write
 operations.
 
-#### func [Chroot](chroot.go#L12)
+#### func [Chroot](chroot.go#L15)
 
 `func Chroot(root string) (FileSystem, error)`
 
@@ -170,7 +171,7 @@ default:
 IsConstraintError => true
 ```
 
-#### func [ChrootFS](filesystem.go#L35)
+#### func [ChrootFS](filesystem.go#L38)
 
 `func ChrootFS(root FileSystem, path string) (FileSystem, error)`
 
@@ -203,9 +204,11 @@ default:
 
 ```
 
-#### func [OS](os.go#L10)
+#### func [OS](os.go#L14)
 
 `func OS() FileSystem`
+
+OS returns a new instance of the OS filesystem.
 
 ```golang
 

@@ -16,11 +16,9 @@ var (
 
 var (
 	// Maximumn archive size
-	defaultMaxArchiveSize = uint64(1 * 1024 * 1024 * 1024)
+	defaultMaxArchiveSize = uint64(1<<30) // 1GB
 	// Maximum supported file size for archive creation
-	defaultMaxFileSize = uint64(250 * 1024 * 1024)
+	defaultMaxFileSize = uint64(250 * 1<<20) // 250MB
 	// Maximum entry count
 	defaultMaxEntryCount = uint64(10000)
-	// Maximum size explosion magnitude order
-	defaultMaxExplosionMagnitudeOrder = uint64(3)
 )
