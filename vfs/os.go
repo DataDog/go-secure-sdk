@@ -22,7 +22,7 @@ type osFS struct{}
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Create(name string) (File, error) {
-	return os.OpenFile(filepath.FromSlash(name), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0666)
+	return os.OpenFile(filepath.FromSlash(name), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0o666)
 }
 
 //nolint:wrapcheck // No need to wrap error
