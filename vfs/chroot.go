@@ -322,6 +322,7 @@ func (vfs chrootFS) Symlink(sourcePath, targetName string) error {
 	if err != nil {
 		return fmt.Errorf("symlink path %q is not relative to %q: %w", sourcePath, targetName, err)
 	}
+	symlinkPath := filepath.Join(filepath.Dir(targetName), rel)
 
 	// Ensure the symlink is secure
 	if err := isSecurePath(vfs.unsafeFS, vfs.root, sourcePath); err != nil {
@@ -329,6 +330,9 @@ func (vfs chrootFS) Symlink(sourcePath, targetName string) error {
 	}
 	if err := isSecurePath(vfs.unsafeFS, vfs.root, targetName); err != nil {
 		return &ConstraintError{Op: "symlink", Path: targetName, Err: err}
+	}
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, symlinkPath); err != nil {
+		return &ConstraintError{Op: "symlink", Path: symlinkPath, Err: err}
 	}
 
 	return vfs.unsafeFS.Symlink(rel, targetName)
