@@ -1,1 +1,7 @@
 github.com/DataDog/go-secure-sdk,https://github.com/DataDog/go-secure-sdk/blob/HEAD/LICENSE,Apache-2.0
+github.com/davecgh/go-spew/spew,https://github.com/davecgh/go-spew/blob/v1.1.1/LICENSE,ISC
+github.com/google/go-cmp/cmp,https://github.com/google/go-cmp/blob/v0.6.0/LICENSE,BSD-3-Clause
+github.com/pmezard/go-difflib/difflib,https://github.com/pmezard/go-difflib/blob/v1.0.0/LICENSE,BSD-3-Clause
+github.com/stretchr/testify,https://github.com/stretchr/testify/blob/v1.8.4/LICENSE,MIT
+golang.org/x/crypto,https://cs.opensource.google/go/x/crypto/+/v0.18.0:LICENSE,BSD-3-Clause
+gopkg.in/yaml.v3,https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE,MIT
