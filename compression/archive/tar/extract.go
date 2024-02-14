@@ -200,7 +200,8 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 		if filepath.IsAbs(hdr.Linkname) {
 			targetLinkName = filepath.Clean(hdr.Linkname)
 		} else {
-			if filepath.Dir(hdr.Linkname) == "." || strings.HasPrefix(hdr.Linkname, ".."){
+			if filepath.Dir(hdr.Linkname) == "." || strings.HasPrefix(hdr.Linkname, "..") {
+				//nolint:gosec // Path traversal is mitigated by the filesystem abstraction
 				targetLinkName = filepath.Join(filepath.Dir(targetName), hdr.Linkname)
 			} else {
 				// Make the relative link absolute
