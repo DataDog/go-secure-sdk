@@ -20,12 +20,12 @@ tool-docbuild:
 
 tool-licenses:
     @hash go-licenses > /dev/null 2>&1; if [ $? -ne 0 ]; then \
-    GOBIN="$(pwd)/tools/bin" go install github.com/google/go-licenses@latest; \
+    GOBIN="$(pwd)/tools/bin" go install github.com/google/go-licenses@v1.6.0; \
     fi
 
 tool-cyclonedx-gomod:
     @hash cyclonedx-gomod > /dev/null 2>&1; if [ $? -ne 0 ]; then \
-    GOBIN="$(pwd)/tools/bin" go install github.com/google/go-licenses@latest; \
+    GOBIN="$(pwd)/tools/bin" go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.6.0; \
     fi
 
 lint: tool-golangci tool-gofumpt tool-gci
@@ -47,7 +47,7 @@ check-licenses: tool-licenses
     $(pwd)/tools/bin/go-licenses check --disallowed_types=forbidden,restricted,reciprocal,permissive,unknown .
 
 update-3rdparty-licenses: tool-licenses
-    $(pwd)/tools/bin/go-licenses report ./... > LICENSE-3rdparty.csv
+    $(pwd)/tools/bin/go-licenses report --include_tests ./... > LICENSE-3rdparty.csv
 
 bom: dist tool-cyclonedx-gomod
     $(pwd)/tools/bin/cyclonedx-gomod mod -licenses -type library -std -json -output dist/bom.json .
