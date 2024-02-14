@@ -41,6 +41,16 @@ func ChrootFS(root FileSystem, path string) (FileSystem, error) {
 		return nil, errors.New("root filesystem must not be nil")
 	}
 
+	// Check if the path exists
+	if !root.Exists(path) {
+		return nil, fmt.Errorf("path %q does not exist", path)
+	}
+
+	// Check if the path is a directory
+	if !root.IsDir(path) {
+		return nil, fmt.Errorf("path %q is not a directory", path)
+	}
+
 	// Try to chroot to the given root path
 	chroot, f, err := root.Resolve(path)
 	if err != nil {

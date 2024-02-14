@@ -14,6 +14,7 @@ type options struct {
 	MaxArchiveSize       uint64
 	MaxEntryCount        uint64
 	MaxFileSize          uint64
+	MaxSymlinkRecursion  uint64
 	IncludeFilter        FileInfoFilterFunc
 	ExcludeFilter        FileInfoFilterFunc
 	CompressFilter       FileInfoFilterFunc
@@ -58,6 +59,13 @@ func WithMaxEntryCount(value uint64) Option {
 func WithMaxFileSize(value uint64) Option {
 	return func(o *options) {
 		o.MaxFileSize = value
+	}
+}
+
+// WithMaxSymlinkRecursion overrides the default maximum symlink recursion depth.
+func WithMaxSymlinkRecursion(value uint64) Option {
+	return func(o *options) {
+		o.MaxSymlinkRecursion = value
 	}
 }
 
