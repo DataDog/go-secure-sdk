@@ -15,7 +15,6 @@ import (
 
 	"github.com/DataDog/go-secure-sdk/ioutil"
 	"github.com/DataDog/go-secure-sdk/vfs"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Extract TAR content from the reader to the given outPath prefix.
@@ -178,7 +177,6 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileSystem, symlinks []*tar.Header) error {
 	// Check recursion level
 	if level > maxRecursionDepth {
-		spew.Dump(symlinks)
 		return fmt.Errorf("maximum symlink recursion level reached (%d): %w", level, ErrAbortedOperation)
 	}
 	if len(symlinks) == 0 {
