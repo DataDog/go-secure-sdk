@@ -220,13 +220,9 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 		}
 
 		// Confirm filesystem membership
-		d, f, err := out.Resolve(targetLinkName)
-		if err != nil {
+		if _, _, err := out.Resolve(targetLinkName); err != nil {
 			return fmt.Errorf("unable to validate symlink target: %w", err)
 		}
-
-		_ = d
-		_ = f
 
 		switch hdr.Typeflag {
 		case tar.TypeLink:
