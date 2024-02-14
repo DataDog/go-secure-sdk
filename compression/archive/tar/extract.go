@@ -177,7 +177,7 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileSystem, symlinks []*tar.Header) error {
 	// Check recursion level
 	if level > maxRecursionDepth {
-		return fmt.Errorf("maximum symlink recursion level reached: %w", ErrAbortedOperation)
+		return fmt.Errorf("maximum symlink recursion level reached (%d): %w", level, ErrAbortedOperation)
 	}
 	if len(symlinks) == 0 {
 		// Fast path

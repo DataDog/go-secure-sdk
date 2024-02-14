@@ -12,6 +12,7 @@ FEATURES:
   * `Chroot` ensures that the target directory is an existing directory during
     the initialization
   * Support `SymlinkFS` for FS link operations (Go 1.23)
+  * `Symlink` will create relative links when used in ChrootFS
 
 ## 0.0.3
 
