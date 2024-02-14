@@ -85,6 +85,15 @@ func TestOSFS(t *testing.T) {
 		}
 		require.True(t, sysFs.Exists(targetSymlink))
 
+		sfi3, err := sysFs.Lstat(targetSymlink)
+		require.NoError(t, err)
+		require.NotNil(t, sfi3)
+		require.True(t, sfi3.Mode()&fs.ModeSymlink != 0)
+
+		symPath, err := sysFs.ReadLink(targetSymlink)
+		require.NoError(t, err)
+		require.Equal(t, symPath, filepath.Join(tmpDir, "create.dat"))
+
 		confirmedDir, fn, err = sysFs.Resolve(targetSymlink)
 		require.NoError(t, err)
 		require.Equal(t, fn, "create.dat")

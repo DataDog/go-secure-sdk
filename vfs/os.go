@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 // OS returns a new instance of the OS filesystem.
@@ -21,7 +22,7 @@ type osFS struct{}
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Create(name string) (File, error) {
-	return os.Create(filepath.FromSlash(name))
+	return os.OpenFile(filepath.FromSlash(name), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0666)
 }
 
 //nolint:wrapcheck // No need to wrap error

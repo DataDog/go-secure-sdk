@@ -61,7 +61,7 @@ type FileSystem interface {
 	// Chmod changes the filemode of the given path.
 	Chmod(name string, mode fs.FileMode) error
 	// Symlink creates a symbolink link.
-	Symlink(name, target string) error
+	Symlink(path, name string) error
 	// Link creates a hardlink.
 	Link(path, name string) error
 	// RemoveAll removes all path elements from the given path from the filesystem.

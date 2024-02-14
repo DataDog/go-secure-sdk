@@ -167,7 +167,7 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 	// Process symlinks and hardlinks
 	if len(symlinks) > 0 {
 		if err := processLinks(0, dopts.MaxSymlinkRecursion, outPath, out, symlinks); err != nil {
-			return fmt.Errorf("unable to process symlinks: %w", err)
+			return fmt.Errorf("unable to process links: %w", err)
 		}
 	}
 
@@ -200,8 +200,12 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 		if filepath.IsAbs(hdr.Linkname) {
 			targetLinkName = filepath.Clean(hdr.Linkname)
 		} else {
-			//nolint:gosec // Path traversal is mitigated by the filesystem abstraction
-			targetLinkName = filepath.Join(filepath.Dir(targetName), hdr.Linkname)
+			if filepath.Dir(hdr.Linkname) == "." || strings.HasPrefix(hdr.Linkname, ".."){
+				targetLinkName = filepath.Join(filepath.Dir(targetName), hdr.Linkname)
+			} else {
+				// Make the relative link absolute
+				targetLinkName = "/" + filepath.Clean(hdr.Linkname)
+			}
 		}
 
 		// Check for zip-slip attacks (1st pass)
@@ -212,28 +216,23 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 			return fmt.Errorf("tar entry %s is trying to escape the destination directory", hdr.Name)
 		}
 
-		// Check if the target link already exists, if not, add to next pass
-		if !out.Exists(targetLinkName) {
-			// Add to next pass
-			next = append(next, hdr)
-			continue
-		}
-
-		// Confirm filesystem membership
-		if _, _, err := out.Resolve(targetLinkName); err != nil {
-			return fmt.Errorf("unable to validate symlink target: %w", err)
-		}
-
 		switch hdr.Typeflag {
 		case tar.TypeLink:
 			// Create an absolute hardlink
 			if err := out.Link(targetLinkName, targetName); err != nil {
-				return fmt.Errorf("unable to create hardlink: %w", err)
+				return fmt.Errorf("unable to create hardlink %q to %q: %w", hdr.Linkname, hdr.Name, err)
 			}
 		case tar.TypeSymlink:
+			// Check if the target link already exists, if not, add to next pass
+			if !out.Exists(targetLinkName) {
+				// Add to next pass
+				next = append(next, hdr)
+				continue
+			}
+
 			// Create an absolute symlink
 			if err := out.Symlink(targetLinkName, targetName); err != nil {
-				return fmt.Errorf("unable to create symlink: %w", err)
+				return fmt.Errorf("unable to create symlink %q to %q: %w", hdr.Linkname, hdr.Name, err)
 			}
 		}
 	}
