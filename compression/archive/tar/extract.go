@@ -24,7 +24,7 @@ import (
 // The extraction process is protected against zip-slip attacks, limited in terms
 // of file count, and file size.
 //
-//nolint:gocognit,gocyclo // This function is complex by nature
+//nolint:gocognit // This function is complex by nature
 func Extract(r io.Reader, outPath string, opts ...Option) error {
 	// Check arguments
 	if r == nil {
