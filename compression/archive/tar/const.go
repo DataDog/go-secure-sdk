@@ -21,4 +21,6 @@ var (
 	defaultMaxFileSize = uint64(250 << 20) // 250MB
 	// Maximum entry count
 	defaultMaxEntryCount = uint64(10000)
+	// Maximum symlink recursion
+	defaultMaxSymlinkRecursion = uint64(5)
 )

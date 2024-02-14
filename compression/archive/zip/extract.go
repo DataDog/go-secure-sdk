@@ -37,6 +37,7 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 		MaxArchiveSize: defaultMaxArchiveSize,
 		MaxFileSize:    defaultMaxFileSize,
 		MaxEntryCount:  defaultMaxEntryCount,
+		MaxSymlinkRecursion: defaultMaxSymlinkRecursion,
 	}
 	for _, o := range opts {
 		o(dopts)
@@ -164,8 +165,35 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 		}
 	}
 
+	// Process symlinks and hardlinks
+	if len(symlinks) > 0 {
+		if err := processLinks(0, dopts.MaxSymlinkRecursion, outPath, out, symlinks); err != nil {
+			return fmt.Errorf("unable to process symlinks: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileSystem, symlinks []*zip.File) error {
+	// Check recursion level
+	if level > maxRecursionDepth {
+		return fmt.Errorf("maximum symlink recursion level reached: %w", ErrAbortedOperation)
+	}
+	if len(symlinks) == 0 {
+		// Fast path
+		return nil
+	}
+
+	// Prepare next pass
+	next := []*zip.File{}
+
 	// Post process symlinks
 	for _, f := range symlinks {
+		if f == nil {
+			continue
+		}
+
 		targetName := filepath.Clean(f.Name)
 
 		// Open file
@@ -193,7 +221,14 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 		// check for the case where the chrooted filesystem is bypassed or doesn't
 		// work properly.
 		if !strings.HasPrefix(filepath.Join(outPath, targetLinkName), filepath.Clean(outPath)+string(os.PathSeparator)) {
-			return fmt.Errorf("zip entry %s is trying to escape the destination directory", f.Name)
+			return fmt.Errorf("zip entry %q is trying to escape the destination directory", f.Name)
+		}
+
+		// Check if the target link already exists, if not, add to next pass
+		if !out.Exists(targetLinkName) {
+			// Add to next pass
+			next = append(next, f)
+			continue
 		}
 
 		// Confirm filesystem membership
@@ -205,6 +240,11 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 		if err := out.Symlink(targetLinkName, targetName); err != nil {
 			return fmt.Errorf("unable to create symlink: %w", err)
 		}
+	}
+
+	// Process next pass
+	if len(next) > 0 {
+		return processLinks(level + 1, maxRecursionDepth, outPath, out, next)
 	}
 
 	return nil

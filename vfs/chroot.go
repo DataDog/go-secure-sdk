@@ -347,6 +347,38 @@ func (vfs chrootFS) Link(oldpath, newpath string) error {
 	return vfs.unsafeFS.Link(oldpath, newpath)
 }
 
+// Lstat delegates to the embedded unsafe FS after having confirmed the path
+// to be inside root. If the provided path violates this constraint, an error
+// of type ConstraintError is returned.
+//
+//nolint:wrapcheck // No need to wrap error
+func (vfs chrootFS) Lstat(path string) (fs.FileInfo, error) {
+	// Apply root prefix
+	path = vfs.root.Join(path)
+
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, path); err != nil {
+		return nil, &ConstraintError{Op: "lstat", Path: path, Err: err}
+	}
+
+	return vfs.unsafeFS.Lstat(path)
+}
+
+// ReadLink delegates to the embedded unsafe FS after having confirmed the path
+// to be inside root. If the provided path violates this constraint, an error
+// of type ConstraintError is returned.
+//
+//nolint:wrapcheck // No need to wrap error
+func (vfs chrootFS) ReadLink(path string) (string, error) {
+	// Apply root prefix
+	path = vfs.root.Join(path)
+
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, path); err != nil {
+		return "", &ConstraintError{Op: "readlink", Path: path, Err: err}
+	}
+
+	return vfs.unsafeFS.ReadLink(path)
+}
+
 // -----------------------------------------------------------------------------
 
 // isSecurePath confirms the given path is inside root using the provided file

@@ -122,6 +122,16 @@ func (vfs osFS) Stat(name string) (fs.FileInfo, error) {
 }
 
 //nolint:wrapcheck // No need to wrap error
+func (vfs osFS) Lstat(name string) (fs.FileInfo, error) {
+	return os.Lstat(filepath.FromSlash(name))
+}
+
+//nolint:wrapcheck // No need to wrap error
+func (vfs osFS) ReadLink(name string) (string, error) {
+	return os.Readlink(filepath.FromSlash(name))
+}
+
+//nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Symlink(oldname, newname string) error {
 	return os.Symlink(filepath.FromSlash(oldname), filepath.FromSlash(newname))
 }
@@ -145,7 +155,7 @@ func (vfs osFS) Resolve(path string) (ConfirmedDir, string, error) {
 	// Resolve the potential symlink to retrieve the real target.
 	deLinked, err := filepath.EvalSymlinks(absRoot)
 	if err != nil {
-		return "", "", fmt.Errorf("evalsymlink failure on '%s' : %w", path, err)
+		return "", "", fmt.Errorf("evalsymlink failure on %q : %w", absRoot, err)
 	}
 
 	// If the target is a directory, we don't need to continue.

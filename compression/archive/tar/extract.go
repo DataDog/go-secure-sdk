@@ -36,9 +36,10 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 
 	// Apply default options
 	dopts := &options{
-		MaxArchiveSize: defaultMaxArchiveSize,
-		MaxFileSize:    defaultMaxFileSize,
-		MaxEntryCount:  defaultMaxEntryCount,
+		MaxArchiveSize:      defaultMaxArchiveSize,
+		MaxFileSize:         defaultMaxFileSize,
+		MaxEntryCount:       defaultMaxEntryCount,
+		MaxSymlinkRecursion: defaultMaxSymlinkRecursion,
 	}
 	for _, o := range opts {
 		o(dopts)
@@ -63,6 +64,9 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 				break
 			}
 			return fmt.Errorf("unable to read tar entry: %w", err)
+		}
+		if hdr == nil {
+			continue
 		}
 
 		// Retrieve fileinfo
@@ -160,8 +164,35 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 		}
 	}
 
+	// Process symlinks and hardlinks
+	if len(symlinks) > 0 {
+		if err := processLinks(0, dopts.MaxSymlinkRecursion, outPath, out, symlinks); err != nil {
+			return fmt.Errorf("unable to process symlinks: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileSystem, symlinks []*tar.Header) error {
+	// Check recursion level
+	if level > maxRecursionDepth {
+		return fmt.Errorf("maximum symlink recursion level reached: %w", ErrAbortedOperation)
+	}
+	if len(symlinks) == 0 {
+		// Fast path
+		return nil
+	}
+
+	// Prepare next pass
+	next := []*tar.Header{}
+
 	// Post process symlinks
 	for _, hdr := range symlinks {
+		if hdr == nil {
+			continue
+		}
+
 		targetName := filepath.Clean(hdr.Name)
 
 		// Absolute or relative symlink
@@ -181,10 +212,21 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 			return fmt.Errorf("tar entry %s is trying to escape the destination directory", hdr.Name)
 		}
 
+		// Check if the target link already exists, if not, add to next pass
+		if !out.Exists(targetLinkName) {
+			// Add to next pass
+			next = append(next, hdr)
+			continue
+		}
+
 		// Confirm filesystem membership
-		if _, _, err := out.Resolve(targetLinkName); err != nil {
+		d, f, err := out.Resolve(targetLinkName)
+		if err != nil {
 			return fmt.Errorf("unable to validate symlink target: %w", err)
 		}
+
+		_ = d
+		_ = f
 
 		switch hdr.Typeflag {
 		case tar.TypeLink:
@@ -198,6 +240,11 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 				return fmt.Errorf("unable to create symlink: %w", err)
 			}
 		}
+	}
+
+	// Process next pass
+	if len(next) > 0 {
+		return processLinks(level + 1, maxRecursionDepth, outPath, out, next)
 	}
 
 	return nil

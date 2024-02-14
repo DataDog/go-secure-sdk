@@ -1,3 +1,18 @@
+## 0.0.4
+
+### 2024-02-14
+
+FEATURES:
+
+* `archive/tar`
+  * Support recursive symbolic links
+* `archive/zip`
+  * Support recursive symbolic links
+* `vfs`
+  * `Chroot` ensures that the target directory is an existing directory during
+    the initialization
+  * Support `SymlinkFS` for FS link operations (Go 1.23)
+
 ## 0.0.3
 
 ### 2024-02-13

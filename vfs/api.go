@@ -22,6 +22,22 @@ type File interface {
 	io.Writer
 }
 
+// SymlinkFS extends the default filesystem abstraction to add symbolic link
+// operations. (target Go 1.23)
+//
+// https://github.com/golang/go/issues/49580
+type SymlinkFS interface {
+	fs.FS
+
+	// ReadLink returns the destination of the named symbolic link.
+	ReadLink(name string) (string, error)
+
+	// Lstat returns a FileInfo describing the file without following any
+	// symbolic links.
+	// If there is an error, it should be of type *PathError.
+	Lstat(name string) (fs.FileInfo, error)
+}
+
 // FileSystem extends the default read-only filesystem abstraction to add write
 // operations.
 type FileSystem interface {
@@ -30,6 +46,7 @@ type FileSystem interface {
 	fs.ReadDirFS
 	fs.ReadFileFS
 	fs.GlobFS
+	SymlinkFS
 
 	// Create a file.
 	Create(name string) (File, error)
