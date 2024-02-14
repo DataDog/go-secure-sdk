@@ -34,9 +34,9 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 
 	// Apply default options
 	dopts := &options{
-		MaxArchiveSize: defaultMaxArchiveSize,
-		MaxFileSize:    defaultMaxFileSize,
-		MaxEntryCount:  defaultMaxEntryCount,
+		MaxArchiveSize:      defaultMaxArchiveSize,
+		MaxFileSize:         defaultMaxFileSize,
+		MaxEntryCount:       defaultMaxEntryCount,
 		MaxSymlinkRecursion: defaultMaxSymlinkRecursion,
 	}
 	for _, o := range opts {
@@ -244,7 +244,7 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 
 	// Process next pass
 	if len(next) > 0 {
-		return processLinks(level + 1, maxRecursionDepth, outPath, out, next)
+		return processLinks(level+1, maxRecursionDepth, outPath, out, next)
 	}
 
 	return nil

@@ -244,7 +244,7 @@ func processLinks(level, maxRecursionDepth uint64, outPath string, out vfs.FileS
 
 	// Process next pass
 	if len(next) > 0 {
-		return processLinks(level + 1, maxRecursionDepth, outPath, out, next)
+		return processLinks(level+1, maxRecursionDepth, outPath, out, next)
 	}
 
 	return nil
