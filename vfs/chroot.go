@@ -312,19 +312,26 @@ func (vfs chrootFS) Chmod(path string, mode fs.FileMode) error {
 // of type ConstraintError is returned.
 //
 //nolint:wrapcheck // No need to wrap error
-func (vfs chrootFS) Symlink(oldpath, newpath string) error {
+func (vfs chrootFS) Symlink(sourcePath, targetName string) error {
 	// Apply root prefix
-	oldpath = vfs.root.Join(oldpath)
-	newpath = vfs.root.Join(newpath)
+	sourcePath = vfs.root.Join(sourcePath)
+	targetName = vfs.root.Join(targetName)
 
-	if err := isSecurePath(vfs.unsafeFS, vfs.root, oldpath); err != nil {
-		return &ConstraintError{Op: "symlink", Path: oldpath, Err: err}
-	}
-	if err := isSecurePath(vfs.unsafeFS, vfs.root, newpath); err != nil {
-		return &ConstraintError{Op: "symlink", Path: newpath, Err: err}
+	// Symlink should be relative to the new path when used in the chroot
+	rel, err := filepath.Rel(filepath.Dir(targetName), sourcePath)
+	if err != nil {
+		return fmt.Errorf("symlink path %q is not relative to %q: %w", sourcePath, targetName, err)
 	}
 
-	return vfs.unsafeFS.Symlink(oldpath, newpath)
+	// Ensure the symlink is secure
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, sourcePath); err != nil {
+		return &ConstraintError{Op: "symlink", Path: sourcePath, Err: err}
+	}
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, targetName); err != nil {
+		return &ConstraintError{Op: "symlink", Path: targetName, Err: err}
+	}
+
+	return vfs.unsafeFS.Symlink(rel, targetName)
 }
 
 // Link delegates to the embedded unsafe FS after having confirmed the path
