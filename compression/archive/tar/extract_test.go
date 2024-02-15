@@ -60,7 +60,9 @@ func TestExtract_Golden(t *testing.T) {
 
 		// Create a test instance
 		t.Run(path, func(t *testing.T) {
-			err := Extract(f, t.TempDir())
+			err := Extract(f, t.TempDir(),
+				WithRestoreTimes(true),
+			)
 			require.NoError(t, err)
 		})
 

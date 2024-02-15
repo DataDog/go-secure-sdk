@@ -8,7 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"syscall"
+	"time"
 )
 
 // OS returns a new instance of the OS filesystem.
@@ -22,7 +22,10 @@ type osFS struct{}
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Create(name string) (File, error) {
-	return os.OpenFile(filepath.FromSlash(name), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0o666)
+	if !vfs.isValidPath(name) {
+		return nil, fmt.Errorf("invalid path: %s", name)
+	}
+	return createNewFile(name)
 }
 
 //nolint:wrapcheck // No need to wrap error
@@ -47,6 +50,9 @@ func (vfs osFS) RemoveAll(path string) error {
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Open(name string) (fs.File, error) {
+	if !vfs.isValidPath(name) {
+		return nil, fmt.Errorf("invalid path: %s", name)
+	}
 	return os.Open(filepath.FromSlash(name))
 }
 
@@ -58,7 +64,7 @@ func (osFS) Exists(name string) bool {
 
 // IsDir delegates to os.Stat and FileInfo.IsDir
 func (osFS) IsDir(name string) bool {
-	info, err := os.Stat(filepath.FromSlash(name))
+	info, err := os.Lstat(filepath.FromSlash(name))
 	if err != nil {
 		return false
 	}
@@ -115,6 +121,16 @@ func (vfs osFS) WalkDir(path string, walkFn fs.WalkDirFunc) error {
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Chmod(name string, mode fs.FileMode) error {
 	return os.Chmod(filepath.FromSlash(name), mode)
+}
+
+//nolint:wrapcheck // No need to wrap error
+func (vfs osFS) Chown(name string, uid, gid int) error {
+	return os.Chown(filepath.FromSlash(name), uid, gid)
+}
+
+//nolint:wrapcheck // No need to wrap error
+func (vfs osFS) Chtimes(name string, atime, mtime time.Time) error {
+	return os.Chtimes(filepath.FromSlash(name), atime, mtime)
 }
 
 //nolint:wrapcheck // No need to wrap error
@@ -182,4 +198,15 @@ func (vfs osFS) Resolve(path string) (ConfirmedDir, string, error) {
 	}
 
 	return ConfirmedDir(filepath.FromSlash(d)), f, nil
+}
+
+func (vfs osFS) isValidPath(path string) bool {
+	d, f := filepath.Split(path)
+	if !vfs.IsDir(d) {
+		return false
+	}
+	if isInvalidFilename(f) {
+		return false
+	}
+	return true
 }

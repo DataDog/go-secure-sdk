@@ -31,6 +31,14 @@ func TestOSFS(t *testing.T) {
 		require.False(t, sysFs.Exists(testFilePath))
 		require.False(t, sysFs.IsDir(testFilePath))
 
+		e, err := sysFs.Create("/invalid/test")
+		require.Error(t, err)
+		require.Nil(t, e)
+
+		e, err = sysFs.Create("\x00badfilename")
+		require.Error(t, err)
+		require.Nil(t, e)
+
 		f, err := sysFs.Create(testFilePath)
 		require.NoError(t, err)
 		require.NotNil(t, f)

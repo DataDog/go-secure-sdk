@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -60,6 +61,10 @@ type FileSystem interface {
 	Exists(path string) bool
 	// Chmod changes the filemode of the given path.
 	Chmod(name string, mode fs.FileMode) error
+	// Chowwn changes the owner of the given path.
+	Chown(name string, uid, gid int) error
+	// Chtimes changes the access and modification times of the given path.
+	Chtimes(name string, atime, mtime time.Time) error
 	// Symlink creates a symbolink link.
 	Symlink(path, name string) error
 	// Link creates a hardlink.

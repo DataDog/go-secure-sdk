@@ -102,23 +102,18 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 			return fmt.Errorf("tar entry %s is trying to escape the destination directory", hdr.Name)
 		}
 
-		// Determine if we need to skip the FS item
-		if dopts.OverwriteFilter != nil {
-			// Check existence
-			tfi, err := out.Stat(targetPath)
-			switch {
-			case err == nil:
-				// Nothing to do
-			case errors.Is(err, fs.ErrNotExist):
-				// Nothing to do
-			default:
-				return fmt.Errorf("unable to retrieve target file info: %w", err)
+		// Check existence
+		if fi, err := out.Lstat(targetPath); err == nil {
+			// Check if the file should be overwritten
+			if dopts.OverwriteFilter != nil && dopts.OverwriteFilter(targetPath, fi) {
+				continue
 			}
 
-			// Check if we have to skip the file overwrite
-			if tfi != nil && dopts.OverwriteFilter(targetPath, tfi) {
-				// Skip the file
-				continue
+			// Remove existing file
+			if !(fi.IsDir() && hdr.Typeflag == tar.TypeDir) {
+				if err := out.RemoveAll(targetPath); err != nil {
+					return fmt.Errorf("unable to remove existing file %q: %w", targetPath, err)
+				}
 			}
 		}
 
@@ -158,6 +153,32 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 			// Update file attributes
 			if err := out.Chmod(targetPath, fs.FileMode(hdr.Mode)); err != nil {
 				return fmt.Errorf("unable to update file attributes: %w", err)
+			}
+
+			if dopts.RestoreTimes {
+				// Update file timestamps
+				if err := out.Chtimes(targetPath, hdr.AccessTime, hdr.ModTime); err != nil {
+					return fmt.Errorf("unable to update file timestamps %q: %w", targetPath, err)
+				}
+			}
+
+			if dopts.RestoreOwner {
+				// Map UID/GID if needed
+				uid, gid := hdr.Uid, hdr.Gid
+				if dopts.UIDGIDMapper != nil {
+					uid, gid, err = dopts.UIDGIDMapper(hdr.Uid, hdr.Gid)
+					if err != nil {
+						return fmt.Errorf("unable to map UID/GID on file %q: %w", targetPath, err)
+					}
+					if uid < 0 || gid < 0 {
+						return fmt.Errorf("invalid UID/GID mapping on file %q: %w", targetPath, ErrAbortedOperation)
+					}
+				}
+
+				// Update file owner
+				if err := out.Chown(targetPath, uid, gid); err != nil {
+					return fmt.Errorf("unable to update file owner on %q: %w", targetPath, err)
+				}
 			}
 		default:
 			// ignore

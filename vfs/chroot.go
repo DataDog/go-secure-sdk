@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Chroot returns a chrooted filesystem assuming an OS base filesystem as root
@@ -305,6 +306,38 @@ func (vfs chrootFS) Chmod(path string, mode fs.FileMode) error {
 	}
 
 	return vfs.unsafeFS.Chmod(path, mode)
+}
+
+// Chown delegates to the embedded unsafe FS after having confirmed the path
+// to be inside root. If the provided path violates this constraint, an error
+// of type ConstraintError is returned.
+//
+//nolint:wrapcheck // No need to wrap error
+func (vfs chrootFS) Chown(path string, uid, gid int) error {
+	// Apply root prefix
+	path = vfs.root.Join(path)
+
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, path); err != nil {
+		return &ConstraintError{Op: "chown", Path: path, Err: err}
+	}
+
+	return vfs.unsafeFS.Chown(path, uid, gid)
+}
+
+// Chtimes delegates to the embedded unsafe FS after having confirmed the path
+// to be inside root. If the provided path violates this constraint, an error
+// of type ConstraintError is returned.
+//
+//nolint:wrapcheck // No need to wrap error
+func (vfs chrootFS) Chtimes(path string, atime, mtime time.Time) error {
+	// Apply root prefix
+	path = vfs.root.Join(path)
+
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, path); err != nil {
+		return &ConstraintError{Op: "chtimes", Path: path, Err: err}
+	}
+
+	return vfs.unsafeFS.Chtimes(path, atime, mtime)
 }
 
 // Symlink delegates to the embedded unsafe FS after having confirmed the path
