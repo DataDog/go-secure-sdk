@@ -19,6 +19,9 @@ type options struct {
 	OverwriteFilter     FileInfoFilterFunc
 	AddEmptyDirectories bool
 	HeaderRewritter     HeaderProcessorFunc
+	UIDGIDMapper        UIDGIDMapperFunc
+	RestoreTimes        bool
+	RestoreOwner        bool
 }
 
 // Option declares operation functional option.
@@ -30,6 +33,9 @@ type FileInfoFilterFunc func(path string, fi fs.FileInfo) bool
 
 // HeaderProcessorFunc declares the function type used to pre-process Tar item headers.
 type HeaderProcessorFunc func(hdr *tar.Header) *tar.Header
+
+// UIDGIDMapperFunc declares the function type used to map UIDs and GIDs.
+type UIDGIDMapperFunc func(uid, gid int) (int, int, error)
 
 // WithMaxArchiveSize overrides the default maximum archive size.
 func WithMaxArchiveSize(value uint64) Option {
@@ -76,7 +82,10 @@ func WithExcludeFilter(value FileInfoFilterFunc) Option {
 }
 
 // WithOverwriteFilter defines the function used to determine if an item should
-// be overwritten during archive extraction.
+// NOT be overwritten during archive extraction.
+// This is useful to prevent overwriting files during extraction.
+// The default behavior is to overwrite files. The function should return true
+// to skip overwrite, false otherwise.
 func WithOverwriteFilter(value FileInfoFilterFunc) Option {
 	return func(o *options) {
 		o.OverwriteFilter = value
@@ -94,6 +103,28 @@ func WithEmptyDirectories(value bool) Option {
 func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option {
 	return func(o *options) {
 		o.HeaderRewritter = value
+	}
+}
+
+// WithUIDGIDMapperFunc sets the UidGidMapper interceptor.
+// This is useful to map UIDs and GIDs to a different range.
+func WithUIDGIDMapperFunc(value UIDGIDMapperFunc) Option {
+	return func(o *options) {
+		o.UIDGIDMapper = value
+	}
+}
+
+// WithRestoreTimes sets a flag to restore the original file times during extraction.
+func WithRestoreTimes(value bool) Option {
+	return func(o *options) {
+		o.RestoreTimes = value
+	}
+}
+
+// WithRestoreOwner sets a flag to restore the original file owner during extraction.
+func WithRestoreOwner(value bool) Option {
+	return func(o *options) {
+		o.RestoreOwner = value
 	}
 }
 

@@ -31,6 +31,14 @@ func TestOSFS(t *testing.T) {
 		require.False(t, sysFs.Exists(testFilePath))
 		require.False(t, sysFs.IsDir(testFilePath))
 
+		e, err := sysFs.Create("/invalid/test")
+		require.Error(t, err)
+		require.Nil(t, e)
+
+		e, err = sysFs.Create("\x00badfilename")
+		require.Error(t, err)
+		require.Nil(t, e)
+
 		f, err := sysFs.Create(testFilePath)
 		require.NoError(t, err)
 		require.NotNil(t, f)
@@ -84,6 +92,15 @@ func TestOSFS(t *testing.T) {
 			require.Equal(t, fi3.Mode().String(), "-rw-------")
 		}
 		require.True(t, sysFs.Exists(targetSymlink))
+
+		sfi3, err := sysFs.Lstat(targetSymlink)
+		require.NoError(t, err)
+		require.NotNil(t, sfi3)
+		require.True(t, sfi3.Mode()&fs.ModeSymlink != 0)
+
+		symPath, err := sysFs.ReadLink(targetSymlink)
+		require.NoError(t, err)
+		require.Equal(t, symPath, filepath.Join(tmpDir, "create.dat"))
 
 		confirmedDir, fn, err = sysFs.Resolve(targetSymlink)
 		require.NoError(t, err)

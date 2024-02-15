@@ -2,17 +2,41 @@
 
 ### Not released yet
 
+BREAKING-CHANGES:
+
+* `vfs`
+  * `Chroot` doesn't accept symlink to a directory as input path anymore. The
+    path must be a directory to prevent confusion.
+  * `IsDir` returns false when targeting a directory symlink
+
 FEATURES:
 
 * `archive/tar`
   * Support recursive symbolic links
+  * `WithRestoreOwner` can be used during the extraction to restore initial
+    UIG/GID attributes
+  * `WithUIDGIDMapper` can be used to provide a UID/GID mapper function to remap
+    attributes during the extraction
+  * `WithRestoreTimes` can be used during extraction to restore Created/Modified
+    timestamp attributes
 * `archive/zip`
   * Support recursive symbolic links
 * `vfs`
+  * Support `SymlinkFS` for FS link operations (Go 1.23)
+
+ENHANCEMENTS:
+
+* `archive/tar`
+  * Items stored using the `./` prefix in the archive are considered as absolute
+    path relative the extraction path
+* `vfs`
   * `Chroot` ensures that the target directory is an existing directory during
     the initialization
-  * Support `SymlinkFS` for FS link operations (Go 1.23)
-  * `Symlink` will create relative links when used in ChrootFS
+  * `Symlink` will create relative links when used in ChrootFS to allow extracted
+    path independence
+  * Files are created without `O_TRUNC` to prevent unexpected file truncation
+  * Platform dependent filename filter added to prevent bad filenames and
+    reserved name usages
 
 ## 0.0.3
 

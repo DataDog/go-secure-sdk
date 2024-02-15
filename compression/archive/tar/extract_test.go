@@ -19,8 +19,6 @@ import (
 )
 
 func TestExtract_Golden(t *testing.T) {
-	t.Parallel()
-
 	root := os.DirFS("testdata")
 
 	require.NoError(t, fs.WalkDir(root, "bad", func(path string, d fs.DirEntry, err error) error {
@@ -39,8 +37,6 @@ func TestExtract_Golden(t *testing.T) {
 
 		// Create a test instance
 		t.Run(path, func(t *testing.T) {
-			t.Parallel()
-
 			err := Extract(f, t.TempDir())
 			require.Error(t, err)
 		})
@@ -64,9 +60,9 @@ func TestExtract_Golden(t *testing.T) {
 
 		// Create a test instance
 		t.Run(path, func(t *testing.T) {
-			t.Parallel()
-
-			err := Extract(f, t.TempDir())
+			err := Extract(f, t.TempDir(),
+				WithRestoreTimes(true),
+			)
 			require.NoError(t, err)
 		})
 

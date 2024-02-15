@@ -146,19 +146,20 @@ func TestChrootFS(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "symlink",
+			args: args{
+				root:     root,
+				rootPath: "symlink",
+			},
+			wantErr: true,
+		},
 		// ---------------------------------------------------------------------
 		{
 			name: "valid",
 			args: args{
 				root:     root,
 				rootPath: "subdir",
-			},
-		},
-		{
-			name: "symlink",
-			args: args{
-				root:     root,
-				rootPath: "symlink",
 			},
 		},
 	}
