@@ -1,6 +1,6 @@
 ## 0.0.4
 
-### Not released yet
+### 2024-02-15
 
 BREAKING-CHANGES:
 
