@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -406,7 +407,9 @@ func TestExtract_WithRestoreTimes(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	b, err := builder.New(out).With(
-		builder.File("file.txt", strings.NewReader("hello, world")),
+		builder.File("file.txt", strings.NewReader("hello, world"),
+			builder.WithModTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+		),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, b)
@@ -422,7 +425,7 @@ func TestExtract_WithRestoreTimes(t *testing.T) {
 	// Check the file
 	fi, err := root.Lstat("file.txt")
 	require.NoError(t, err)
-	require.NotZero(t, fi.ModTime())
+	require.Equal(t, time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC), fi.ModTime().UTC())
 }
 
 func TestExtract_WithRestoreMode(t *testing.T) {
