@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -447,5 +448,10 @@ func TestExtract_WithRestoreMode(t *testing.T) {
 	// Check the file
 	fi, err := root.Lstat("file.txt")
 	require.NoError(t, err)
-	require.Equal(t, fs.FileMode(0o400), fi.Mode())
+	if runtime.GOOS == "windows" {
+		// Windows does not support file mode entirely
+		require.Equal(t, fs.FileMode(0o444), fi.Mode())
+	} else {
+		require.Equal(t, fs.FileMode(0o400), fi.Mode())
+	}
 }
