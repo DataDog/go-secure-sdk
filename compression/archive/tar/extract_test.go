@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"runtime"
 	"strings"
 	"syscall"
 	"testing"
@@ -426,6 +427,11 @@ func TestExtract_WithRestoreTimes(t *testing.T) {
 func TestExtract_WithRestoreOwner(t *testing.T) {
 	t.Parallel()
 
+	// Skip on Windows
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping test on windows")
+	}
+
 	out := &bytes.Buffer{}
 	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world"),
@@ -455,6 +461,11 @@ func TestExtract_WithRestoreOwner(t *testing.T) {
 
 func TestExtract_WithRestoreOwner_WithRemapper(t *testing.T) {
 	t.Parallel()
+
+	// Skip on Windows
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping test on windows")
+	}
 
 	t.Run("remap", func(t *testing.T) {
 		out := &bytes.Buffer{}
