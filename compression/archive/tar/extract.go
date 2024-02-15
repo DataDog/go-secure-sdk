@@ -142,6 +142,14 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 
 			// Use a buffered copy from the file directly
 			if _, err := ioutil.LimitCopy(targetFile, tarReader, dopts.MaxFileSize); err != nil {
+				// Close the target file
+				if err := targetFile.Close(); err != nil {
+					return fmt.Errorf("unable to successfully close %q file: %w", targetPath, err)
+				}
+				// Remove the file
+				if err := out.RemoveAll(targetPath); err != nil {
+					return fmt.Errorf("unable to remove file %q: %w", targetPath, err)
+				}
 				return fmt.Errorf("unable to extract file: %w", err)
 			}
 
