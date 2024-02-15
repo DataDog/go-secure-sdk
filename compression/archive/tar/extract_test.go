@@ -200,7 +200,6 @@ func TestExtract_Archive_SizeLimiter(t *testing.T) {
 	require.Error(t, Extract(out, tmpDir, WithMaxArchiveSize(2)))
 }
 
-
 func TestExtract_Archive_CountLimiter(t *testing.T) {
 	t.Parallel()
 
@@ -306,8 +305,7 @@ func TestExtract_Empty(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
-	)
+	b := builder.New(out).With()
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -503,7 +501,7 @@ func TestExtract_WithRestoreMode(t *testing.T) {
 	out := &bytes.Buffer{}
 	b := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world"),
-			builder.WithMode(0400),
+			builder.WithMode(0o400),
 		),
 	)
 	require.NoError(t, b.Close())
@@ -518,5 +516,5 @@ func TestExtract_WithRestoreMode(t *testing.T) {
 	// Check the file
 	fi, err := root.Lstat("file.txt")
 	require.NoError(t, err)
-	require.Equal(t, fs.FileMode(0400), fi.Mode())
+	require.Equal(t, fs.FileMode(0o400), fi.Mode())
 }

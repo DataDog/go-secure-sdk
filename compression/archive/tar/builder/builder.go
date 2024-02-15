@@ -12,13 +12,13 @@ import (
 // New creates a new tar archive builder.
 func New(w io.Writer) *ArchiveBuilder {
 	return &ArchiveBuilder{
-		tw:             tar.NewWriter(w),
+		tw: tar.NewWriter(w),
 	}
 }
 
 // ArchiveBuilder is a tar archive builder.
 type ArchiveBuilder struct {
-	tw            *tar.Writer
+	tw *tar.Writer
 }
 
 // With applies the given options to the builder.

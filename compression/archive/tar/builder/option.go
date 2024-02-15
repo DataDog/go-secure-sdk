@@ -47,7 +47,7 @@ func File(name string, r io.Reader, hm ...HeaderModifier) Option {
 		// Create a new file entry
 		hdr := &tar.Header{
 			Name: name,
-			Mode: 0600,
+			Mode: 0o600,
 			Size: int64(len(data)),
 		}
 		for _, m := range hm {
@@ -75,8 +75,8 @@ func Dir(name string, hm ...HeaderModifier) Option {
 	return func(tw *tar.Writer) error {
 		// Create a new directory entry
 		hdr := &tar.Header{
-			Name: name,
-			Mode: 0700,
+			Name:     name,
+			Mode:     0o700,
 			Typeflag: tar.TypeDir,
 		}
 		for _, m := range hm {
@@ -101,7 +101,7 @@ func Hardlink(name, target string, hm ...HeaderModifier) Option {
 		hdr := &tar.Header{
 			Name:     name,
 			Linkname: target,
-			Mode:     0600,
+			Mode:     0o600,
 			Typeflag: tar.TypeLink,
 		}
 		for _, m := range hm {
@@ -126,7 +126,7 @@ func Symlink(name, target string, hm ...HeaderModifier) Option {
 		hdr := &tar.Header{
 			Name:     name,
 			Linkname: target,
-			Mode:     0600,
+			Mode:     0o600,
 			Typeflag: tar.TypeSymlink,
 		}
 		for _, m := range hm {

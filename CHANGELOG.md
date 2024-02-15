@@ -1,3 +1,12 @@
+## 0.0.5
+
+### Not released yet
+
+FEATURES:
+
+* `archive/tar`
+  * Use a `archive/tar` builder to build tests TAR archives
+
 ## 0.0.4
 
 ### 2024-02-15
