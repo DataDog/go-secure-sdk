@@ -7,6 +7,7 @@ BREAKING-CHANGES:
 * `vfs`
   * `Chroot` doesn't accept symlink to a directory as input path anymore. The
     path must be a directory to prevent confusion.
+  * `IsDir` returns false when targeting a directory symlink
 
 FEATURES:
 
