@@ -172,7 +172,9 @@ func fingerprint(t *testing.T, root vfs.FileSystem) string {
 		require.NoError(t, err)
 
 		if fi.Mode()&os.ModeSymlink != 0 {
-			out.WriteString(fmt.Sprintf("l:%s:%s\n", path, fi.Name()))
+			target, err := root.ReadLink(path)
+			require.NoError(t, err)
+			out.WriteString(fmt.Sprintf("l:%s:%s\n", path, target))
 		} else {
 			out.WriteString(fmt.Sprintf("f:%s:%d:%s\n", path, fi.Size(), hex.EncodeToString(h)))
 		}
@@ -362,7 +364,7 @@ func TestExtract_LinkSupport(t *testing.T) {
 	require.Equal(t, "hello, world", string(data))
 
 	fgr := fingerprint(t, root)
-	require.Equal(t, "f:file.txt:12:09ca7e4eaa6e8ae9c7d261167129184883644d07dfba7cbfbc4c8a2e08360d5b\nl:symlink:symlink\n", fgr)
+	require.Equal(t, "f:file.txt:12:09ca7e4eaa6e8ae9c7d261167129184883644d07dfba7cbfbc4c8a2e08360d5b\nl:symlink:file.txt\n", fgr)
 }
 
 func TestExtract_HardlinkSupport(t *testing.T) {
