@@ -87,23 +87,21 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 			return fmt.Errorf("zip entry %s is trying to escape the destination directory", f.Name)
 		}
 
-		// Determine if we need to skip the FS item
-		if dopts.OverwriteFilter != nil {
-			// Check existence
-			tfi, err := out.Stat(targetPath)
-			switch {
-			case err == nil:
-				// Nothing to do
-			case errors.Is(err, fs.ErrNotExist):
-				// Nothing to do
-			default:
-				return fmt.Errorf("unable to retrieve target file info: %w", err)
+		// Retrieve file information
+		zfi := f.FileInfo()
+
+		// Check existence
+		if fi, err := out.Lstat(targetPath); err == nil {
+			// Check if the file should be overwritten
+			if dopts.OverwriteFilter != nil && dopts.OverwriteFilter(targetPath, fi) {
+				continue
 			}
 
-			// Check if we have to skip the file overwrite
-			if tfi != nil && dopts.OverwriteFilter(targetPath, tfi) {
-				// Skip the file
-				continue
+			// Remove existing file
+			if !(fi.IsDir() && zfi.IsDir()) {
+				if err := out.RemoveAll(targetPath); err != nil {
+					return fmt.Errorf("unable to remove existing file %q: %w", targetPath, err)
+				}
 			}
 		}
 
@@ -117,16 +115,18 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 			}
 		}
 
-		// Retrieve file information
-		fi := f.FileInfo()
-
 		switch {
-		case fi.IsDir():
+		case zfi.IsDir():
 			// ignore
-		case fi.Mode()&fs.ModeSymlink != 0:
+		case zfi.Mode()&fs.ModeSymlink != 0:
 			// Add symlinks to post-processing
 			symlinks = append(symlinks, f)
-		case fi.Mode().IsRegular():
+		case zfi.Mode().IsRegular():
+			// Ensure uncompressed size is not too small (header manipulation attack)
+			if !dopts.DisableFileSizeCheck && f.UncompressedSize64 > dopts.MaxFileSize {
+				return fmt.Errorf("file %q is too large to be extracted: %w", f.Name, ErrAbortedOperation)
+			}
+
 			// Open compressed file
 			fileReader, err := f.Open()
 			if err != nil {
@@ -137,11 +137,6 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 			targetFile, err := out.Create(targetPath)
 			if err != nil {
 				return fmt.Errorf("unable to create the output file: %w", err)
-			}
-
-			// Ensure uncompressed size is not too small (header manipulation attack)
-			if !dopts.DisableFileSizeCheck && f.UncompressedSize64 > dopts.MaxFileSize {
-				return fmt.Errorf("file %q is too large to be extracted: %w", f.Name, ErrAbortedOperation)
 			}
 
 			// Use a buffered decompression to the file directly
