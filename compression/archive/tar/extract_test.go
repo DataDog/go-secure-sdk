@@ -189,11 +189,13 @@ func TestExtract_Archive_SizeLimiter(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 		builder.File("file2.txt", strings.NewReader("hello, world")),
 		builder.File("file3.txt", strings.NewReader("hello, world")),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -204,11 +206,13 @@ func TestExtract_Archive_CountLimiter(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 		builder.File("file2.txt", strings.NewReader("hello, world")),
 		builder.File("file3.txt", strings.NewReader("hello, world")),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -226,11 +230,13 @@ func TestExtract_Archive_ItemSizeLimiter(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 		builder.File("file2.txt", strings.NewReader("hello, world")),
 		builder.File("file3.txt", bytes.NewReader(make([]byte, 1<<20))),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -248,10 +254,12 @@ func TestExtract_Archive_With_Device(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("usb0", &bytes.Buffer{}, builder.WithTypeflag(tar.TypeBlock)),
 		builder.File("file.txt", strings.NewReader("hello, world")),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -277,9 +285,11 @@ func TestExtract_Archive_With_PathTraversal(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("../file.txt", strings.NewReader("hello, world")),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -290,11 +300,13 @@ func TestExtract_LinkSupport_ErrorOnLoop(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.Symlink("zero", "one"),
 		builder.Symlink("one", "two"),
 		builder.Symlink("two", "zero"),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -305,7 +317,9 @@ func TestExtract_Empty(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With()
+	b, err := builder.New(out).With()
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -323,10 +337,12 @@ func TestExtract_LinkSupport(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 		builder.Symlink("symlink", "./file.txt"),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -354,10 +370,12 @@ func TestExtract_HardlinkSupport(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 		builder.Hardlink("hardlink", "./file.txt"),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -385,9 +403,11 @@ func TestExtract_WithRestoreTimes(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world")),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -407,12 +427,14 @@ func TestExtract_WithRestoreOwner(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world"),
 			builder.WithUID(os.Getuid()),
 			builder.WithGID(os.Getgid()),
 		),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()
@@ -436,12 +458,14 @@ func TestExtract_WithRestoreOwner_WithRemapper(t *testing.T) {
 
 	t.Run("remap", func(t *testing.T) {
 		out := &bytes.Buffer{}
-		b := builder.New(out).With(
+		b, err := builder.New(out).With(
 			builder.File("file.txt", strings.NewReader("hello, world"),
 				builder.WithUID(0),
 				builder.WithGID(0),
 			),
 		)
+		require.NoError(t, err)
+		require.NotNil(t, b)
 		require.NoError(t, b.Close())
 
 		tmpDir := t.TempDir()
@@ -464,12 +488,14 @@ func TestExtract_WithRestoreOwner_WithRemapper(t *testing.T) {
 
 	t.Run("remap_error", func(t *testing.T) {
 		out := &bytes.Buffer{}
-		b := builder.New(out).With(
+		b, err := builder.New(out).With(
 			builder.File("file.txt", strings.NewReader("hello, world"),
 				builder.WithUID(0),
 				builder.WithGID(0),
 			),
 		)
+		require.NoError(t, err)
+		require.NotNil(t, b)
 		require.NoError(t, b.Close())
 
 		tmpDir := t.TempDir()
@@ -480,12 +506,14 @@ func TestExtract_WithRestoreOwner_WithRemapper(t *testing.T) {
 
 	t.Run("remap_invalid", func(t *testing.T) {
 		out := &bytes.Buffer{}
-		b := builder.New(out).With(
+		b, err := builder.New(out).With(
 			builder.File("file.txt", strings.NewReader("hello, world"),
 				builder.WithUID(0),
 				builder.WithGID(0),
 			),
 		)
+		require.NoError(t, err)
+		require.NotNil(t, b)
 		require.NoError(t, b.Close())
 
 		tmpDir := t.TempDir()
@@ -499,11 +527,13 @@ func TestExtract_WithRestoreMode(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	b := builder.New(out).With(
+	b, err := builder.New(out).With(
 		builder.File("file.txt", strings.NewReader("hello, world"),
 			builder.WithMode(0o400),
 		),
 	)
+	require.NoError(t, err)
+	require.NotNil(t, b)
 	require.NoError(t, b.Close())
 
 	tmpDir := t.TempDir()

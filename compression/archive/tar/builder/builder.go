@@ -22,11 +22,13 @@ type ArchiveBuilder struct {
 }
 
 // With applies the given options to the builder.
-func (b *ArchiveBuilder) With(bf ...Option) *ArchiveBuilder {
+func (b *ArchiveBuilder) With(bf ...Option) (*ArchiveBuilder, error) {
 	for _, o := range bf {
-		o(b.tw)
+		if err := o(b.tw); err != nil {
+			return nil, err
+		}
 	}
-	return b
+	return b, nil
 }
 
 // Close closes the tar writer.
