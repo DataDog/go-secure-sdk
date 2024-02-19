@@ -6,6 +6,8 @@ FEATURES:
 
 * `archive/tar`
   * Use a `archive/tar` builder to build tests TAR archives
+* `vfs`
+  * Add `Truncate` support
 
 ## 0.0.4
 

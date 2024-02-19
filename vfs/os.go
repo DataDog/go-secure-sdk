@@ -125,7 +125,7 @@ func (vfs osFS) Chmod(name string, mode fs.FileMode) error {
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Chown(name string, uid, gid int) error {
-	return os.Chown(filepath.FromSlash(name), uid, gid)
+	return chown(filepath.FromSlash(name), uid, gid)
 }
 
 //nolint:wrapcheck // No need to wrap error
