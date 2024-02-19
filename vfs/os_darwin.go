@@ -24,3 +24,7 @@ func createNewFile(name string) (*os.File, error) {
 func chown(name string, uid, gid int) error {
 	return os.Chown(name, uid, gid)
 }
+
+func chmod(name string, mode os.FileMode) error {
+	return os.Chmod(name, mode)
+}

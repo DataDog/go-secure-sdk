@@ -32,6 +32,21 @@ func createNewFile(name string) (*os.File, error) {
 }
 
 func chown(name string, uid, gid int) error {
-	// Windows does not support chown
 	return nil
+}
+
+func chmod(name string, mode os.FileMode) error {
+	// Retrieve the file info to check if it's a symlink.
+	fi, err := os.Stat(name)
+	if err != nil {
+		return err
+	}
+
+	// Ensure consistent behavior with other platforms.
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return &os.PathError{Op: "chmod", Path: name, Err: os.ErrInvalid}
+	}
+
+	// Change the file mode.
+	return os.Chmod(name, mode)
 }
