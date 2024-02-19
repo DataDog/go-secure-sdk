@@ -37,7 +37,7 @@ func chown(name string, uid, gid int) error {
 
 func chmod(name string, mode os.FileMode) error {
 	// Retrieve the file info to check if it's a symlink.
-	fi, err := os.Stat(name)
+	fi, err := os.Lstat(name)
 	if err != nil {
 		return err
 	}
