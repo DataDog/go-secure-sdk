@@ -120,12 +120,12 @@ func (vfs osFS) WalkDir(path string, walkFn fs.WalkDirFunc) error {
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Chmod(name string, mode fs.FileMode) error {
-	return os.Chmod(filepath.FromSlash(name), mode)
+	return chmod(filepath.FromSlash(name), mode)
 }
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Chown(name string, uid, gid int) error {
-	return os.Chown(filepath.FromSlash(name), uid, gid)
+	return chown(filepath.FromSlash(name), uid, gid)
 }
 
 //nolint:wrapcheck // No need to wrap error
@@ -156,6 +156,11 @@ func (vfs osFS) Symlink(oldname, newname string) error {
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Link(oldname, newname string) error {
 	return os.Link(filepath.FromSlash(oldname), filepath.FromSlash(newname))
+}
+
+//nolint:wrapcheck // No need to wrap error
+func (vfs osFS) Truncate(name string, size int64) error {
+	return os.Truncate(filepath.FromSlash(name), size)
 }
 
 // Resolve the given path membership within the filesystem.

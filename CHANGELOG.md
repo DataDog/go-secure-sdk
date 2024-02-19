@@ -1,11 +1,23 @@
-## 0.0.5
+## 0.0.6
 
 ### Not released yet
+
+## 0.0.5
+
+### 2024-02-19
+
+ENHANCEMENTS:
+
+* `vfs`
+  * (windows-only) `os.Chmod/os.Chtimes/os.Chown` when targeting a symlink will
+    return an error to be consistent with other platforms
 
 FEATURES:
 
 * `archive/tar`
   * Use a `archive/tar` builder to build tests TAR archives
+* `vfs`
+  * Add `Truncate` support
 
 ## 0.0.4
 

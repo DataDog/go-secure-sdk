@@ -20,3 +20,11 @@ func isInvalidFilename(name string) bool {
 func createNewFile(name string) (*os.File, error) {
 	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC|syscall.O_NOFOLLOW, 0o666)
 }
+
+func chown(name string, uid, gid int) error {
+	return os.Chown(name, uid, gid)
+}
+
+func chmod(name string, mode os.FileMode) error {
+	return os.Chmod(name, mode)
+}

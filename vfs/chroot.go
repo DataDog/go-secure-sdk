@@ -423,6 +423,22 @@ func (vfs chrootFS) ReadLink(path string) (string, error) {
 	return vfs.unsafeFS.ReadLink(path)
 }
 
+// Truncate delegates to the embedded unsafe FS after having confirmed the path
+// to be inside root. If the provided path violates this constraint, an error
+// of type ConstraintError is returned.
+//
+//nolint:wrapcheck // No need to wrap error
+func (vfs chrootFS) Truncate(name string, size int64) error {
+	// Apply root prefix
+	name = vfs.root.Join(name)
+
+	if err := isSecurePath(vfs.unsafeFS, vfs.root, name); err != nil {
+		return &ConstraintError{Op: "truncate", Path: name, Err: err}
+	}
+
+	return vfs.unsafeFS.Truncate(name, size)
+}
+
 // -----------------------------------------------------------------------------
 
 // isSecurePath confirms the given path is inside root using the provided file

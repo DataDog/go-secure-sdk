@@ -30,3 +30,34 @@ func isInvalidFilename(name string) bool {
 func createNewFile(name string) (*os.File, error) {
 	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0o666)
 }
+
+func chown(name string, uid, gid int) error {
+	// Retrieve the file info to check if it's a symlink.
+	fi, err := os.Lstat(name)
+	if err != nil {
+		return err
+	}
+
+	// Ensure consistent behavior with other platforms.
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return &os.PathError{Op: "chown", Path: name, Err: os.ErrInvalid}
+	}
+
+	return nil
+}
+
+func chmod(name string, mode os.FileMode) error {
+	// Retrieve the file info to check if it's a symlink.
+	fi, err := os.Lstat(name)
+	if err != nil {
+		return err
+	}
+
+	// Ensure consistent behavior with other platforms.
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return &os.PathError{Op: "chmod", Path: name, Err: os.ErrInvalid}
+	}
+
+	// Change the file mode.
+	return os.Chmod(name, mode)
+}
