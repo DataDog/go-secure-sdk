@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -292,7 +293,11 @@ func TestChroot(t *testing.T) {
 			fi, err := sysFs.Stat("chmoded.dat")
 			require.NoError(t, err)
 			require.NotNil(t, fi)
-			require.Equal(t, fs.FileMode(0o400), fi.Mode())
+			if runtime.GOOS == "windows" {
+				require.Equal(t, fs.FileMode(0o444), fi.Mode())
+			} else {
+				require.Equal(t, fs.FileMode(0o400), fi.Mode())
+			}
 
 			// Invalid
 			require.ErrorContains(t, sysFs.Chmod(filepath.Join("..", "chmoded.dat"), 0o400), "fs-security-constraint")
@@ -307,7 +312,11 @@ func TestChroot(t *testing.T) {
 			fi, err := sysFs.Stat("chmoded-dir")
 			require.NoError(t, err)
 			require.NotNil(t, fi)
-			require.Equal(t, fs.FileMode(0o700)|fs.ModeDir, fi.Mode())
+			if runtime.GOOS == "windows" {
+				require.Equal(t, fs.FileMode(0o777)|fs.ModeDir, fi.Mode())
+			} else {
+				require.Equal(t, fs.FileMode(0o700)|fs.ModeDir, fi.Mode())
+			}
 
 			// Invalid
 			require.ErrorContains(t, sysFs.Chmod(filepath.Join("..", "chmoded-dir"), 0o700), "fs-security-constraint")
