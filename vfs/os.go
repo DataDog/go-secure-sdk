@@ -120,7 +120,7 @@ func (vfs osFS) WalkDir(path string, walkFn fs.WalkDirFunc) error {
 
 //nolint:wrapcheck // No need to wrap error
 func (vfs osFS) Chmod(name string, mode fs.FileMode) error {
-	return os.Chmod(filepath.FromSlash(name), mode)
+	return chmod(filepath.FromSlash(name), mode)
 }
 
 //nolint:wrapcheck // No need to wrap error
