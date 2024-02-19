@@ -158,6 +158,11 @@ func (vfs osFS) Link(oldname, newname string) error {
 	return os.Link(filepath.FromSlash(oldname), filepath.FromSlash(newname))
 }
 
+//nolint:wrapcheck // No need to wrap error
+func (vfs osFS) Truncate(name string, size int64) error {
+	return os.Truncate(filepath.FromSlash(name), size)
+}
+
 // Resolve the given path membership within the filesystem.
 // If resolved the function returns :
 // * a confirmedDirectory instance for a directory or a file path;

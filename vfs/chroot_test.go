@@ -5,8 +5,10 @@ package vfs
 
 import (
 	"io/fs"
+	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -210,14 +212,6 @@ func TestChroot(t *testing.T) {
 		require.ErrorContains(t, sysFs.WalkDir("../", func(path string, info fs.DirEntry, err error) error { return err }), "fs-security-constraint")
 	})
 
-	t.Run("chmod", func(t *testing.T) {
-		// Valid
-		require.NoError(t, sysFs.Chmod("create.dat", 0o600))
-
-		// Invalid
-		require.ErrorContains(t, sysFs.Chmod(filepath.Join("..", "create.dat"), 0o600), "fs-security-constraint")
-	})
-
 	t.Run("symlink", func(t *testing.T) {
 		// Valid
 		require.NoError(t, sysFs.Symlink("create.dat", "symlink"))
@@ -242,5 +236,156 @@ func TestChroot(t *testing.T) {
 		require.Empty(t, p)
 		require.NotNil(t, d)
 		require.Equal(t, FakeRoot, d.String())
+	})
+
+	t.Run("truncate", func(t *testing.T) {
+		// Valid
+		require.NoError(t, sysFs.WriteFile("truncated.dat", []byte("test"), 0o600))
+		fi, err := sysFs.Stat("truncated.dat")
+		require.NoError(t, err)
+		require.NotNil(t, fi)
+		require.Equal(t, int64(4), fi.Size())
+		require.NoError(t, sysFs.Truncate("truncated.dat", 0))
+		fi, err = sysFs.Stat("truncated.dat")
+		require.NoError(t, err)
+		require.NotNil(t, fi)
+		require.Equal(t, int64(0), fi.Size())
+
+		// Invalid
+		require.ErrorContains(t, sysFs.Truncate(filepath.Join("..", "truncated.dat"), 0), "fs-security-constraint")
+	})
+
+	t.Run("chown", func(t *testing.T) {
+		t.Run("file", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.WriteFile("chowned.dat", []byte("test"), 0o600))
+			require.NoError(t, sysFs.Chown("chowned.dat", os.Getuid(), os.Getgid()))
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chown(filepath.Join("..", "chowned.dat"), 0, 0), "fs-security-constraint")
+		})
+
+		t.Run("dir", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.Mkdir("chowned-dir", 0o755))
+			require.NoError(t, sysFs.Chown("chowned-dir", os.Getuid(), os.Getgid()))
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chown(filepath.Join("..", "chowned-dir"), 0, 0), "fs-security-constraint")
+		})
+
+		t.Run("symlink", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.Symlink("created.dat", "symlink103"))
+			// Go Chown does not follow symlinks
+			require.Error(t, sysFs.Chown("symlink103", 0, 0))
+		})
+	})
+
+	t.Run("chmod", func(t *testing.T) {
+		t.Run("file", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.WriteFile("chmoded.dat", []byte("test"), 0o600))
+			require.NoError(t, sysFs.Chmod("chmoded.dat", 0o400))
+
+			// Check
+			fi, err := sysFs.Stat("chmoded.dat")
+			require.NoError(t, err)
+			require.NotNil(t, fi)
+			require.Equal(t, fs.FileMode(0o400), fi.Mode())
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chmod(filepath.Join("..", "chmoded.dat"), 0o400), "fs-security-constraint")
+		})
+
+		t.Run("dir", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.Mkdir("chmoded-dir", 0o755))
+			require.NoError(t, sysFs.Chmod("chmoded-dir", 0o700))
+
+			// Check
+			fi, err := sysFs.Stat("chmoded-dir")
+			require.NoError(t, err)
+			require.NotNil(t, fi)
+			require.Equal(t, fs.FileMode(0o700)|fs.ModeDir, fi.Mode())
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chmod(filepath.Join("..", "chmoded-dir"), 0o700), "fs-security-constraint")
+		})
+
+		t.Run("symlink", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.Symlink("created.dat", "symlink102"))
+			// Go Chmod does not follow symlinks
+			require.Error(t, sysFs.Chmod("symlink102", 0o600))
+		})
+	})
+
+	t.Run("chtimes", func(t *testing.T) {
+		t.Run("file", func(t *testing.T) {
+			testTime := time.Now().UTC()
+
+			// Valid
+			require.NoError(t, sysFs.WriteFile("chtimed.dat", []byte("test"), 0o600))
+			require.NoError(t, sysFs.Chtimes("chtimed.dat", testTime, testTime))
+
+			// Check
+			fi, err := sysFs.Stat("chtimed.dat")
+			require.NoError(t, err)
+			require.NotNil(t, fi)
+			require.Equal(t, testTime, fi.ModTime().UTC())
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chtimes(filepath.Join("..", "chtimed.dat"), testTime, testTime), "fs-security-constraint")
+		})
+
+		t.Run("dir", func(t *testing.T) {
+			testTime := time.Now().UTC()
+
+			// Valid
+			require.NoError(t, sysFs.Mkdir("chtimed-dir", 0o755))
+			require.NoError(t, sysFs.Chtimes("chtimed-dir", testTime, testTime))
+
+			// Check
+			fi, err := sysFs.Stat("chtimed-dir")
+			require.NoError(t, err)
+			require.NotNil(t, fi)
+			require.Equal(t, testTime, fi.ModTime().UTC())
+
+			// Invalid
+			require.ErrorContains(t, sysFs.Chtimes(filepath.Join("..", "chtimed-dir"), testTime, testTime), "fs-security-constraint")
+		})
+
+		t.Run("symlink", func(t *testing.T) {
+			// Valid
+			require.NoError(t, sysFs.Symlink("created.dat", "symlink104"))
+			// Go Chtimes does not follow symlinks
+			require.Error(t, sysFs.Chtimes("symlink104", time.Now(), time.Now()))
+		})
+	})
+
+	t.Run("readLink", func(t *testing.T) {
+		// Valid
+		require.NoError(t, sysFs.Symlink("create.dat", "symlink101"))
+		target, err := sysFs.ReadLink("symlink101")
+		require.NoError(t, err)
+		require.Equal(t, "create.dat", target)
+
+		// Invalid
+		_, err = sysFs.ReadLink(filepath.Join("..", "symlink101"))
+		require.ErrorContains(t, err, "fs-security-constraint")
+	})
+
+	t.Run("lstat", func(t *testing.T) {
+		// Valid
+		require.NoError(t, sysFs.Symlink("create.dat", "symlink100"))
+		fi, err := sysFs.Lstat("symlink100")
+		require.NoError(t, err)
+		require.NotNil(t, fi)
+
+		// Invalid
+		fi, err = sysFs.Lstat(filepath.Join("..", "symlink100"))
+		require.ErrorContains(t, err, "fs-security-constraint")
+		require.Nil(t, fi)
 	})
 }

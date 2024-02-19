@@ -75,6 +75,8 @@ type FileSystem interface {
 	Remove(path string) error
 	// Resolve the given path to return a real/delinked absolute path.
 	Resolve(path string) (ConfirmedDir, string, error)
+	// Truncate changes the size of the given file.
+	Truncate(path string, size int64) error
 	// WriteFile writes given data to the given path as a file with the given filemode.
 	WriteFile(path string, data []byte, perm fs.FileMode) error
 	// WalkDir the filesystem form the given path.
