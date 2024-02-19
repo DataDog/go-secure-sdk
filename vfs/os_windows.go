@@ -32,6 +32,17 @@ func createNewFile(name string) (*os.File, error) {
 }
 
 func chown(name string, uid, gid int) error {
+	// Retrieve the file info to check if it's a symlink.
+	fi, err := os.Lstat(name)
+	if err != nil {
+		return err
+	}
+
+	// Ensure consistent behavior with other platforms.
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return &os.PathError{Op: "chown", Path: name, Err: os.ErrInvalid}
+	}
+
 	return nil
 }
 
