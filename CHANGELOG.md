@@ -4,6 +4,10 @@
 
 ## 0.0.5
 
+DIST:
+
+* Bumps [golang.org/x/crypto](https://github.com/golang/crypto) from 0.18.0 to 0.20.0.
+
 ### 2024-02-19
 
 ENHANCEMENTS:
