@@ -7,8 +7,9 @@ import (
 	"crypto/rsa"
 	"testing"
 
-	security "github.com/DataDog/go-secure-sdk"
 	"github.com/stretchr/testify/require"
+
+	security "github.com/DataDog/go-secure-sdk"
 )
 
 func TestIsUsable(t *testing.T) {

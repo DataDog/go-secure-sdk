@@ -16,9 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/DataDog/go-secure-sdk/crypto/keyutil"
 )
 
 func generateAndSignCertificate(t *testing.T) ([]byte, []byte) {

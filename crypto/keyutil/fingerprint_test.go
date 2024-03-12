@@ -12,8 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	serverCertPEM = []byte(`-----BEGIN CERTIFICATE-----
+var serverCertPEM = []byte(`-----BEGIN CERTIFICATE-----
 MIIEZjCCA06gAwIBAgIUJmJQ3xVko+fzT2wM68QwqinLvWkwDQYJKoZIhvcNAQEL
 BQAwgY8xCzAJBgNVBAYTAlVTMREwDwYDVQQIEwhOZXcgWW9yazERMA8GA1UEBxMI
 TmV3IFlvcmsxFTATBgNVBAoTDERhdGFkb2csIEluYzEcMBoGA1UECxMTU2VydmVy
@@ -39,7 +38,6 @@ xSAy+IgkF06SpkmFctg1vKPRNkb5Q9yBZq4+IBkekYTwrATxZmMxLhO8IOhHXM0V
 m/U6CWcUxZzcI6qB77J1zDnUSSRFSS2H52rVsWMIsonxIbnl3wioeiJcfDp9eaEe
 VsJ2BMO0RQVW7SHeLzY8ff1w+ihbt/v/M3c=
 -----END CERTIFICATE-----`)
-)
 
 func TestPublicKeyFingerprint(t *testing.T) {
 	t.Parallel()

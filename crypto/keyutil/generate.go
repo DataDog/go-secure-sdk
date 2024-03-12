@@ -13,8 +13,10 @@ import (
 	"fmt"
 	"io"
 
-	security "github.com/DataDog/go-secure-sdk"
 	jose "github.com/go-jose/go-jose/v4"
+
+	security "github.com/DataDog/go-secure-sdk"
+
 	"golang.org/x/crypto/ssh"
 )
 

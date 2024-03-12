@@ -11,9 +11,11 @@ import (
 	"io"
 	"testing"
 
-	security "github.com/DataDog/go-secure-sdk"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/stretchr/testify/require"
+
+	security "github.com/DataDog/go-secure-sdk"
+
 	"golang.org/x/crypto/ssh"
 )
 
