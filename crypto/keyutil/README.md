@@ -2,18 +2,15 @@
 
 Package keyutil provides cryptographic keys management functions.
 
-This package follows the recommendations provided by the SDG SKB
-[Cryptographic security specification]([https://datadoghq.atlassian.net/wiki/spaces/SECENG/pages/2285633911/Cryptographic+security+specification](https://datadoghq.atlassian.net/wiki/spaces/SECENG/pages/2285633911/Cryptographic+security+specification))
-
 ## Functions
 
-### func [AttachCertificateToJWK](jwk.go#L47)
+### func [AttachCertificateToJWK](jwk.go#L49)
 
 `func AttachCertificateToJWK(jwk *jose.JSONWebKey, cert *x509.Certificate) error`
 
 AttachCertificateToJWK attaches the given certificate to the JWK.
 
-### func [ExtractKey](generate.go#L161)
+### func [ExtractKey](generate.go#L166)
 
 `func ExtractKey(in any) (any, error)`
 
@@ -55,7 +52,7 @@ if err := json.NewEncoder(&out).Encode(&jwk); err != nil {
 
 FromJWK tries to decode the given reader content as JWK.
 
-### func [FromPEM](pem.go#L101)
+### func [FromPEM](pem.go#L104)
 
 `func FromPEM(r io.Reader) (any, error)`
 
@@ -69,7 +66,7 @@ A public key will be deserialized using PKIX.
 Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
 ed25519.PublicKey
 
-### func [GenerateDefaultKeyPair](generate.go#L48)
+### func [GenerateDefaultKeyPair](generate.go#L53)
 
 `func GenerateDefaultKeyPair() (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -80,7 +77,7 @@ FIPS Mode *enabled* => EC
 
 FIPS Mode *disabled* => OKP (Ed25519)
 
-### func [GenerateKeyPair](generate.go#L58)
+### func [GenerateKeyPair](generate.go#L63)
 
 `func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -97,7 +94,7 @@ if err != nil {
 
 ```
 
-### func [GenerateKeyPairWithRand](generate.go#L72)
+### func [GenerateKeyPairWithRand](generate.go#L77)
 
 `func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -107,19 +104,19 @@ and allow a custom randsource to be used.
 FYI, RSA key generation Go implementation can't be deterministic by design.
 [https://github.com/golang/go/issues/38548](https://github.com/golang/go/issues/38548)
 
-### func [IsUsable](support.go#L14)
+### func [IsUsable](support.go#L17)
 
 `func IsUsable(key any) error`
 
 IsUsable returns an error if the given key as environmental restrictions.
 
-### func [PublicKey](generate.go#L114)
+### func [PublicKey](generate.go#L119)
 
 `func PublicKey(priv any) (crypto.PublicKey, error)`
 
 PublicKey extracts a public key from a private key.
 
-### func [PublicKeyFingerprint](fingerprint.go#L24)
+### func [PublicKeyFingerprint](fingerprint.go#L27)
 
 `func PublicKeyFingerprint(key any) ([]byte, error)`
 
@@ -156,7 +153,7 @@ if err != nil {
 9351dda87a49db2102aef97dec41a58bd6df9245610c87744b39a0ef3d95a060
 ```
 
-### func [ToDERBytes](pem.go#L29)
+### func [ToDERBytes](pem.go#L32)
 
 `func ToDERBytes(key any) (string, []byte, error)`
 
@@ -204,7 +201,7 @@ fmt.Printf("%s", jwe)
 
 ```
 
-### func [ToJWK](jwk.go#L23)
+### func [ToJWK](jwk.go#L25)
 
 `func ToJWK(key any) (*jose.JSONWebKey, error)`
 
@@ -236,7 +233,7 @@ fmt.Printf("%s", out.String())
 
 ```
 
-### func [ToPEM](pem.go#L69)
+### func [ToPEM](pem.go#L72)
 
 `func ToPEM(w io.Writer, key any) error`
 
@@ -256,13 +253,13 @@ ed25519.PublicKey
 
 ToPublicJWKS encodes the giev keyset to a JSONWebKeySet.
 
-### func [VerifyPair](generate.go#L188)
+### func [VerifyPair](generate.go#L193)
 
 `func VerifyPair(pubkey crypto.PublicKey, key crypto.PrivateKey) error`
 
 VerifyPair that the public key matches the given private key.
 
-### func [VerifyPublicKey](generate.go#L229)
+### func [VerifyPublicKey](generate.go#L234)
 
 `func VerifyPublicKey(input any, key crypto.PublicKey) error`
 
@@ -270,7 +267,7 @@ VerifyPublicKey verifies that the given public key matches the given input.
 
 ## Types
 
-### type [KeyType](generate.go#L30)
+### type [KeyType](generate.go#L35)
 
 `type KeyType uint`
 

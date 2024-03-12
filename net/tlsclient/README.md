@@ -18,13 +18,13 @@ var (
 
 ## Types
 
-### type [Dialer](secure_dialer.go#L31)
+### type [Dialer](secure_dialer.go#L34)
 
 `type Dialer func(ctx context.Context, network, addr string) (net.Conn, error)`
 
 Dialer represents network dialer function for mocking purpose.
 
-#### func [PinnedDialer](secure_dialer.go#L40)
+#### func [PinnedDialer](secure_dialer.go#L43)
 
 `func PinnedDialer(cfg *tls.Config, fingerPrint []byte) Dialer`
 
