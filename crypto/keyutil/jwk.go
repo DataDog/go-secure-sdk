@@ -6,7 +6,6 @@ package keyutil
 import (
 	"bytes"
 	"crypto"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
@@ -69,9 +68,7 @@ func AttachCertificateToJWK(jwk *jose.JSONWebKey, cert *x509.Certificate) error 
 		}
 
 		// Compute thumbprints for the Leaf certificate.
-		x5tSHA1 := sha1.Sum(cert.Raw)
 		x5tSHA256 := sha256.Sum256(cert.Raw)
-		jwk.CertificateThumbprintSHA1 = x5tSHA1[:]
 		jwk.CertificateThumbprintSHA256 = x5tSHA256[:]
 	}
 

@@ -77,7 +77,7 @@ func PinnedDialer(cfg *tls.Config, fingerPrint []byte) Dialer {
 				return c, fmt.Errorf("unable to compute public key fingerprint: %w", err)
 			}
 
-			// Check equality whith provided fingerprint
+			// Check equality with provided fingerprint
 			if subtle.ConstantTimeCompare(hash, fingerPrint) == 1 {
 				keyPinValid = true
 			}
