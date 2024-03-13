@@ -60,9 +60,9 @@ func GenerateDefaultKeyPair() (crypto.PublicKey, crypto.PrivateKey, error) {
 
 // GenerateKeyPair generates a key pair according to the selected keytype.
 // Supported key types are:
-//  - RSA
-//  - EC
-//  - ED25519 (disabled in FIPS mode)
+//   - RSA
+//   - EC
+//   - ED25519 (disabled in FIPS mode)
 //
 // If the key type is not supported, an error is returned.
 func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error) {
@@ -104,11 +104,11 @@ func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error) {
 // PublicKey extracts a public key from a private key.
 //
 // Supported types:
-//  - *rsa.PrivateKey / *rsa.PublicKey
-//  - *ecdsa.PrivateKey / *ecdsa.PublicKey
-//  - ed25519.PrivateKey / ed25519.PublicKey
-//  - *ecdh.PrivateKey / *ecdh.PublicKey
-//  - jose.JSONWebKey / *jose.JSONWebKey
+//   - *rsa.PrivateKey / *rsa.PublicKey
+//   - *ecdsa.PrivateKey / *ecdsa.PublicKey
+//   - ed25519.PrivateKey / ed25519.PublicKey
+//   - *ecdh.PrivateKey / *ecdh.PublicKey
+//   - jose.JSONWebKey / *jose.JSONWebKey
 //
 // If the input is not a supported type, an error is returned.
 func PublicKey(priv any) (crypto.PublicKey, error) {
@@ -160,16 +160,16 @@ func PublicKey(priv any) (crypto.PublicKey, error) {
 // if a x509.Certificate or x509.CertificateRequest is given.
 //
 // Supported types:
-//  - *rsa.PublicKey / *rsa.PrivateKey
-//  - *ecdsa.PublicKey / *ecdsa.PrivateKey
-//  - ed25519.PublicKey / ed25519.PrivateKey
-//  - *ecdh.PublicKey / *ecdh.PrivateKey
-//  - []byte
-//  - *x509.Certificate
-//  - *x509.CertificateRequest
-//  - ssh.CryptoPublicKey
-//  - *ssh.Certificate
-//  - jose.JSONWebKey / *jose.JSONWebKey
+//   - *rsa.PublicKey / *rsa.PrivateKey
+//   - *ecdsa.PublicKey / *ecdsa.PrivateKey
+//   - ed25519.PublicKey / ed25519.PrivateKey
+//   - *ecdh.PublicKey / *ecdh.PrivateKey
+//   - []byte
+//   - *x509.Certificate
+//   - *x509.CertificateRequest
+//   - ssh.CryptoPublicKey
+//   - *ssh.Certificate
+//   - jose.JSONWebKey / *jose.JSONWebKey
 //
 // If the input is not a supported type, an error is returned.
 func ExtractKey(in any) (any, error) {
