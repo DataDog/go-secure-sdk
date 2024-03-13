@@ -24,6 +24,20 @@ type subjectPublicKeyInfo struct {
 // This fingerprint algorithm marshal the public key using PKIX ASN.1 to DER
 // content. The ASN.1 is processed to retrieve the SubjectPublicKey content from
 // the ASN.1 serialized and compute the SHA256 of the SubjectPublicKey content.
+//
+// Supported key types:
+//  - *rsa.PublicKey / *rsa.PrivateKey
+//  - *ecdsa.PublicKey / *ecdsa.PrivateKey
+//  - ed25519.PublicKey / ed25519.PrivateKey
+//  - *ecdh.PublicKey / *ecdh.PrivateKey
+//  - []byte
+//  - *x509.Certificate
+//  - *x509.CertificateRequest
+//  - ssh.CryptoPublicKey
+//  - *ssh.Certificate
+//  - jose.JSONWebKey / *jose.JSONWebKey
+//
+// Unsupported key will return an error.
 func PublicKeyFingerprint(key any) ([]byte, error) {
 	// Check arguments
 	if key == nil {

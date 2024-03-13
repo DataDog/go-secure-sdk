@@ -4,6 +4,7 @@
 package keyutil
 
 import (
+	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -32,7 +33,7 @@ func TestToJWK(t *testing.T) {
 	t.Run("ED25519", func(t *testing.T) {
 		t.Parallel()
 
-		pub, pk, err := GenerateKeyPairWithRand(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"), ED25519)
+		pub, pk, err := ed25519.GenerateKey(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"))
 		require.NoError(t, err)
 
 		pubJWK, err := ToJWK(pub)
@@ -62,7 +63,7 @@ func TestToPublicJWKS(t *testing.T) {
 	t.Run("ED25519", func(t *testing.T) {
 		t.Parallel()
 
-		pub, pk, err := GenerateKeyPairWithRand(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"), ED25519)
+		pub, pk, err := ed25519.GenerateKey(strings.NewReader("Uv38ByGCZU8WP18PmmIdcpVmx00QA3xNe7sEB9Hixkk"))
 		require.NoError(t, err)
 
 		pubJWK, err := ToPublicJWKS(pub)

@@ -10,12 +10,29 @@ Package keyutil provides cryptographic keys management functions.
 
 AttachCertificateToJWK attaches the given certificate to the JWK.
 
-### func [ExtractKey](generate.go#L166)
+### func [ExtractKey](generate.go#L175)
 
 `func ExtractKey(in any) (any, error)`
 
 ExtractKey returns the given public or private key or extracts the public key
 if a x509.Certificate or x509.CertificateRequest is given.
+
+Supported types:
+
+```go
+- *rsa.PublicKey / *rsa.PrivateKey
+- *ecdsa.PublicKey / *ecdsa.PrivateKey
+- ed25519.PublicKey / ed25519.PrivateKey
+- *ecdh.PublicKey / *ecdh.PrivateKey
+- []byte
+- *x509.Certificate
+- *x509.CertificateRequest
+- ssh.CryptoPublicKey
+- *ssh.Certificate
+- jose.JSONWebKey / *jose.JSONWebKey
+```
+
+If the input is not a supported type, an error is returned.
 
 ### func [FromEncryptedJWK](jwk.go#L185)
 
@@ -66,7 +83,7 @@ A public key will be deserialized using PKIX.
 Supported public key types: *rsa.PublicKey, *ecdsa.PublicKey, *ecdh.PublicKey,
 ed25519.PublicKey
 
-### func [GenerateDefaultKeyPair](generate.go#L53)
+### func [GenerateDefaultKeyPair](generate.go#L52)
 
 `func GenerateDefaultKeyPair() (crypto.PublicKey, crypto.PrivateKey, error)`
 
@@ -77,11 +94,20 @@ FIPS Mode *enabled* => EC
 
 FIPS Mode *disabled* => OKP (Ed25519)
 
-### func [GenerateKeyPair](generate.go#L63)
+### func [GenerateKeyPair](generate.go#L68)
 
 `func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
 
 GenerateKeyPair generates a key pair according to the selected keytype.
+Supported key types are:
+
+```go
+- RSA
+- EC
+- ED25519 (disabled in FIPS mode)
+```
+
+If the key type is not supported, an error is returned.
 
 ```golang
 
@@ -94,29 +120,31 @@ if err != nil {
 
 ```
 
-### func [GenerateKeyPairWithRand](generate.go#L77)
-
-`func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error)`
-
-GenerateKeyPairWithRand generates a key pair according to the selected keytype
-and allow a custom randsource to be used.
-
-FYI, RSA key generation Go implementation can't be deterministic by design.
-[https://github.com/golang/go/issues/38548](https://github.com/golang/go/issues/38548)
-
 ### func [IsUsable](support.go#L17)
 
 `func IsUsable(key any) error`
 
 IsUsable returns an error if the given key as environmental restrictions.
 
-### func [PublicKey](generate.go#L119)
+### func [PublicKey](generate.go#L114)
 
 `func PublicKey(priv any) (crypto.PublicKey, error)`
 
 PublicKey extracts a public key from a private key.
 
-### func [PublicKeyFingerprint](fingerprint.go#L27)
+Supported types:
+
+```go
+- *rsa.PrivateKey / *rsa.PublicKey
+- *ecdsa.PrivateKey / *ecdsa.PublicKey
+- ed25519.PrivateKey / ed25519.PublicKey
+- *ecdh.PrivateKey / *ecdh.PublicKey
+- jose.JSONWebKey / *jose.JSONWebKey
+```
+
+If the input is not a supported type, an error is returned.
+
+### func [PublicKeyFingerprint](fingerprint.go#L41)
 
 `func PublicKeyFingerprint(key any) ([]byte, error)`
 
@@ -126,6 +154,23 @@ PublicKeyFingerprint generates a public key fingerprint.
 This fingerprint algorithm marshal the public key using PKIX ASN.1 to DER
 content. The ASN.1 is processed to retrieve the SubjectPublicKey content from
 the ASN.1 serialized and compute the SHA256 of the SubjectPublicKey content.
+
+Supported key types:
+
+```go
+- *rsa.PublicKey / *rsa.PrivateKey
+- *ecdsa.PublicKey / *ecdsa.PrivateKey
+- ed25519.PublicKey / ed25519.PrivateKey
+- *ecdh.PublicKey / *ecdh.PrivateKey
+- []byte
+- *x509.Certificate
+- *x509.CertificateRequest
+- ssh.CryptoPublicKey
+- *ssh.Certificate
+- jose.JSONWebKey / *jose.JSONWebKey
+```
+
+Unsupported key will return an error.
 
 ```golang
 // Decode certificate
@@ -253,13 +298,13 @@ ed25519.PublicKey
 
 ToPublicJWKS encodes the given keyset to a JSONWebKeySet.
 
-### func [VerifyPair](generate.go#L193)
+### func [VerifyPair](generate.go#L202)
 
 `func VerifyPair(pubkey crypto.PublicKey, key crypto.PrivateKey) error`
 
 VerifyPair that the public key matches the given private key.
 
-### func [VerifyPublicKey](generate.go#L234)
+### func [VerifyPublicKey](generate.go#L243)
 
 `func VerifyPublicKey(input any, key crypto.PublicKey) error`
 
@@ -267,7 +312,7 @@ VerifyPublicKey verifies that the given public key matches the given input.
 
 ## Types
 
-### type [KeyType](generate.go#L35)
+### type [KeyType](generate.go#L34)
 
 `type KeyType uint`
 

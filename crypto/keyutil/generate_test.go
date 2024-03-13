@@ -53,15 +53,6 @@ func TestGenerateKeyPair(t *testing.T) {
 		require.IsType(t, &rsa.PrivateKey{}, pk)
 	})
 
-	t.Run("rsa - ignore random reader error", func(t *testing.T) {
-		t.Parallel()
-
-		pub, pk, err := GenerateKeyPairWithRand(&fakeReader{}, RSA)
-		require.NoError(t, err)
-		require.NotNil(t, pub)
-		require.NotNil(t, pk)
-	})
-
 	t.Run("ec", func(t *testing.T) {
 		t.Parallel()
 
@@ -73,24 +64,6 @@ func TestGenerateKeyPair(t *testing.T) {
 		require.IsType(t, &ecdsa.PrivateKey{}, pk)
 	})
 
-	t.Run("rsa no error", func(t *testing.T) {
-		t.Parallel()
-
-		pub, pk, err := GenerateKeyPairWithRand(&fakeReader{}, RSA)
-		require.NoError(t, err)
-		require.NotNil(t, pub)
-		require.NotNil(t, pk)
-	})
-
-	t.Run("ec no error", func(t *testing.T) {
-		t.Parallel()
-
-		pub, pk, err := GenerateKeyPairWithRand(&fakeReader{}, EC)
-		require.NoError(t, err)
-		require.NotNil(t, pub)
-		require.NotNil(t, pk)
-	})
-
 	t.Run("ed25519", func(t *testing.T) {
 		t.Parallel()
 
@@ -100,15 +73,6 @@ func TestGenerateKeyPair(t *testing.T) {
 		require.IsType(t, ed25519.PublicKey{}, pub)
 		require.NotNil(t, pk)
 		require.IsType(t, ed25519.PrivateKey{}, pk)
-	})
-
-	t.Run("ed25519 error", func(t *testing.T) {
-		t.Parallel()
-
-		pub, pk, err := GenerateKeyPairWithRand(&fakeReader{}, ED25519)
-		require.Error(t, err)
-		require.Nil(t, pub)
-		require.Nil(t, pk)
 	})
 }
 

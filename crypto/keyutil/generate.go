@@ -14,7 +14,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io"
 
 	jose "github.com/go-jose/go-jose/v4"
 
@@ -60,26 +59,13 @@ func GenerateDefaultKeyPair() (crypto.PublicKey, crypto.PrivateKey, error) {
 }
 
 // GenerateKeyPair generates a key pair according to the selected keytype.
-func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error) {
-	// Ensure a correct key type according to enabled flags.
-	if security.InFIPSMode() && kty == ED25519 {
-		return nil, nil, errors.New("Ed25519 key type generation is disabled in FIPS mode")
-	}
-
-	return GenerateKeyPairWithRand(rand.Reader, kty)
-}
-
-// GenerateKeyPairWithRand generates a key pair according to the selected keytype
-// and allow a custom randsource to be used.
+// Supported key types are:
+//  - RSA
+//  - EC
+//  - ED25519 (disabled in FIPS mode)
 //
-// FYI, RSA key generation Go implementation can't be deterministic by design.
-// https://github.com/golang/go/issues/38548
-func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error) {
-	// Check arguments
-	if r == nil {
-		return nil, nil, errors.New("random reader must not be nil")
-	}
-
+// If the key type is not supported, an error is returned.
+func GenerateKeyPair(kty KeyType) (crypto.PublicKey, crypto.PrivateKey, error) {
 	switch kty {
 	case RSA:
 		// RSA key generation can't be deterministic by design, ensure the crypto
@@ -104,7 +90,7 @@ func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto
 			return nil, nil, errors.New("Ed25519 key type generation is disabled in FIPS mode")
 		}
 
-		pub, pk, err := ed25519.GenerateKey(r)
+		pub, pk, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, nil, fmt.Errorf("unable to generate OKP key pair: %w", err)
 		}
@@ -116,6 +102,15 @@ func GenerateKeyPairWithRand(r io.Reader, kty KeyType) (crypto.PublicKey, crypto
 }
 
 // PublicKey extracts a public key from a private key.
+//
+// Supported types:
+//  - *rsa.PrivateKey / *rsa.PublicKey
+//  - *ecdsa.PrivateKey / *ecdsa.PublicKey
+//  - ed25519.PrivateKey / ed25519.PublicKey
+//  - *ecdh.PrivateKey / *ecdh.PublicKey
+//  - jose.JSONWebKey / *jose.JSONWebKey
+//
+// If the input is not a supported type, an error is returned.
 func PublicKey(priv any) (crypto.PublicKey, error) {
 	switch k := priv.(type) {
 	case *rsa.PrivateKey:
@@ -163,6 +158,20 @@ func PublicKey(priv any) (crypto.PublicKey, error) {
 
 // ExtractKey returns the given public or private key or extracts the public key
 // if a x509.Certificate or x509.CertificateRequest is given.
+//
+// Supported types:
+//  - *rsa.PublicKey / *rsa.PrivateKey
+//  - *ecdsa.PublicKey / *ecdsa.PrivateKey
+//  - ed25519.PublicKey / ed25519.PrivateKey
+//  - *ecdh.PublicKey / *ecdh.PrivateKey
+//  - []byte
+//  - *x509.Certificate
+//  - *x509.CertificateRequest
+//  - ssh.CryptoPublicKey
+//  - *ssh.Certificate
+//  - jose.JSONWebKey / *jose.JSONWebKey
+//
+// If the input is not a supported type, an error is returned.
 func ExtractKey(in any) (any, error) {
 	switch k := in.(type) {
 	case *rsa.PublicKey, *rsa.PrivateKey,
