@@ -251,7 +251,7 @@ ed25519.PublicKey
 
 `func ToPublicJWKS(keys ...crypto.PublicKey) (*jose.JSONWebKeySet, error)`
 
-ToPublicJWKS encodes the giev keyset to a JSONWebKeySet.
+ToPublicJWKS encodes the given keyset to a JSONWebKeySet.
 
 ### func [VerifyPair](generate.go#L193)
 
