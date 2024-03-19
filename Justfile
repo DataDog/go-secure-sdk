@@ -29,8 +29,8 @@ tool-cyclonedx-gomod:
     fi
 
 lint: tool-golangci tool-gofumpt tool-gci
-    [ $(gofumpt -extra -l . | wc -l) != 0 ] && { echo 'code not formated'; exit 1; }; \
-    [ $(gci diff -s standard -s "prefix(golang.org/x/)" -s default -s "prefix(github.com/DataDog)" . | wc -l) != 0 ] && { echo 'imports not sorted'; exit 1; }; \
+    [ $($(pwd)/tools/bin/gofumpt -extra -l . | wc -l) != 0 ] && { echo 'code not formated'; exit 1; }; \
+    [ $($(pwd)/tools/bin/gci diff -s standard -s "prefix(golang.org/x/)" -s default -s "prefix(github.com/DataDog)" . | wc -l) != 0 ] && { echo 'imports not sorted'; exit 1; }; \
     $(pwd)/tools/bin/golangci-lint run --timeout 5m
 
 fmt: tool-gofumpt tool-gci

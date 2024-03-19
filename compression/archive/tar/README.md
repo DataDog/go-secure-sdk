@@ -5,6 +5,32 @@ Package tar provides TAR archive management functions
 This package with hardened controls to protect the caller from various attack
 related to insecure compression management.
 
+This package provides a simple API to create and extract TAR archives.
+
+These features are supported:
+- Create a TAR archive from a Golang filesystem interface
+- Extract a TAR archive to a directory
+- Limit the size of the archive and the size of the files
+- Limit the number of files in the archive
+- Limit the number of symlink recursion in the archive
+- Symbolic and hard links
+- File/Directory permissions restoration
+- File/Directory ownership restoration (disabled by default)
+- File/Directory time attributes restoration (disabled by default)
+
+This package provides the following security features:
+- Protect against item name attacks
+- Protect against item count attacks
+- Protect against item size attacks
+- Protect against zip-slip attacks
+- Protect against link recursion attacks
+- Protect against path traversal attacks (chrooted extraction)
+
+This package is limited by the Go standard library and does not support
+advanced features such as:
+- Symlink handling to unexistant files/directories
+- Hardlink handling to unexistant files/directories
+
 ## Variables
 
 ```golang
@@ -148,80 +174,118 @@ f evil.sh
 
 ## Types
 
-### type [FileInfoFilterFunc](options.go#L28)
+### type [FileInfoFilterFunc](options.go#L32)
 
 `type FileInfoFilterFunc func(path string, fi fs.FileInfo) bool`
 
 FileInfoFilterFunc declares the function type used to take a boolean decision
 based on the path and the associated file information.
 
-### type [HeaderProcessorFunc](options.go#L31)
+### type [HeaderProcessorFunc](options.go#L35)
 
 `type HeaderProcessorFunc func(hdr *tar.Header) *tar.Header`
 
 HeaderProcessorFunc declares the function type used to pre-process Tar item headers.
 
-#### func [ResetHeaderTimes](options.go#L96)
+#### func [ResetHeaderTimes](options.go#L135)
 
 `func ResetHeaderTimes() HeaderProcessorFunc`
 
 ResetHeaderTimes returns a header processor used to reset Tar header times.
 Useful to get deterministic output.
 
-### type [Option](options.go#L24)
+### type [Option](options.go#L28)
 
 `type Option func(*options)`
 
 Option declares operation functional option.
 
-#### func [WithEmptyDirectories](options.go#L79)
+#### func [WithEmptyDirectories](options.go#L96)
 
 `func WithEmptyDirectories(value bool) Option`
 
 WithEmptyDirectories sets a flag to add directories during compression.
 
-#### func [WithExcludeFilter](options.go#L64)
+#### func [WithExcludeFilter](options.go#L78)
 
 `func WithExcludeFilter(value FileInfoFilterFunc) Option`
 
 WithExcludeFilter defines the function used to determine if an item should
 be excluded from the archive.
 
-#### func [WithHeaderRewritterFunc](options.go#L86)
+#### func [WithHeaderRewritterFunc](options.go#L103)
 
 `func WithHeaderRewritterFunc(value HeaderProcessorFunc) Option`
 
 WithHeaderRewritterFunc sets the Tar item header rewritter interceptor.
 
-#### func [WithIncludeFilter](options.go#L56)
+#### func [WithIncludeFilter](options.go#L70)
 
 `func WithIncludeFilter(value FileInfoFilterFunc) Option`
 
 WithIncludeFilter defines the function used to determine if an item should
 be included in the archive.
 
-#### func [WithMaxArchiveSize](options.go#L34)
+#### func [WithMaxArchiveSize](options.go#L41)
 
 `func WithMaxArchiveSize(value uint64) Option`
 
 WithMaxArchiveSize overrides the default maximum archive size.
 
-#### func [WithMaxEntryCount](options.go#L41)
+#### func [WithMaxEntryCount](options.go#L48)
 
 `func WithMaxEntryCount(value uint64) Option`
 
 WithMaxEntryCount overrides the default maximum entry count in the archive (directories and files).
 
-#### func [WithMaxFileSize](options.go#L48)
+#### func [WithMaxFileSize](options.go#L55)
 
 `func WithMaxFileSize(value uint64) Option`
 
 WithMaxFileSize overrides the default maximum file size for compression.
 
-#### func [WithOverwriteFilter](options.go#L72)
+#### func [WithMaxSymlinkRecursion](options.go#L62)
+
+`func WithMaxSymlinkRecursion(value uint64) Option`
+
+WithMaxSymlinkRecursion overrides the default maximum symlink recursion depth.
+
+#### func [WithOverwriteFilter](options.go#L89)
 
 `func WithOverwriteFilter(value FileInfoFilterFunc) Option`
 
 WithOverwriteFilter defines the function used to determine if an item should
-be overwritten during archive extraction.
+NOT be overwritten during archive extraction.
+This is useful to prevent overwriting files during extraction.
+The default behavior is to overwrite files. The function should return true
+to skip overwrite, false otherwise.
+
+#### func [WithRestoreOwner](options.go#L125)
+
+`func WithRestoreOwner(value bool) Option`
+
+WithRestoreOwner sets a flag to restore the original file owner during extraction.
+
+#### func [WithRestoreTimes](options.go#L118)
+
+`func WithRestoreTimes(value bool) Option`
+
+WithRestoreTimes sets a flag to restore the original file times during extraction.
+
+#### func [WithUIDGIDMapperFunc](options.go#L111)
+
+`func WithUIDGIDMapperFunc(value UIDGIDMapperFunc) Option`
+
+WithUIDGIDMapperFunc sets the UidGidMapper interceptor.
+This is useful to map UIDs and GIDs to a different range.
+
+### type [UIDGIDMapperFunc](options.go#L38)
+
+`type UIDGIDMapperFunc func(uid, gid int) (int, int, error)`
+
+UIDGIDMapperFunc declares the function type used to map UIDs and GIDs.
+
+## Sub Packages
+
+* [builder](./builder): Package builder provides a tar archive builder essentially for testing purposes.
 

@@ -97,39 +97,39 @@ Join the given path to the confirmed directory.
 
 `func (d ConfirmedDir) String() string`
 
-### type [ConstraintError](chroot.go#L28)
+### type [ConstraintError](chroot.go#L29)
 
 `type ConstraintError struct { ... }`
 
 ConstraintError records an error and the operation and file that
 violated it.
 
-#### func (*ConstraintError) [Error](chroot.go#L35)
+#### func (*ConstraintError) [Error](chroot.go#L36)
 
 `func (e *ConstraintError) Error() string`
 
 Error returns the formatted error string for the ConstraintError.
 
-#### func (*ConstraintError) [Unwrap](chroot.go#L40)
+#### func (*ConstraintError) [Unwrap](chroot.go#L41)
 
 `func (e *ConstraintError) Unwrap() error`
 
 Unwrap implements error unwrapping.
 
-### type [File](api.go#L20)
+### type [File](api.go#L21)
 
 `type File interface { ... }`
 
 File represents the file writer interface.
 
-### type [FileSystem](api.go#L27)
+### type [FileSystem](api.go#L44)
 
 `type FileSystem interface { ... }`
 
 FileSystem extends the default read-only filesystem abstraction to add write
 operations.
 
-#### func [Chroot](chroot.go#L15)
+#### func [Chroot](chroot.go#L16)
 
 `func Chroot(root string) (FileSystem, error)`
 
@@ -204,7 +204,7 @@ default:
 
 ```
 
-#### func [OS](os.go#L14)
+#### func [OS](os.go#L15)
 
 `func OS() FileSystem`
 
@@ -231,4 +231,13 @@ default:
 }
 
 ```
+
+### type [SymlinkFS](api.go#L30)
+
+`type SymlinkFS interface { ... }`
+
+SymlinkFS extends the default filesystem abstraction to add symbolic link
+operations. (target Go 1.23)
+
+[https://github.com/golang/go/issues/49580](https://github.com/golang/go/issues/49580)
 
