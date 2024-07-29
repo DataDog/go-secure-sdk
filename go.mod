@@ -12,7 +12,7 @@ require golang.org/x/text v0.16.0 // indirect
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.3
+	github.com/go-jose/go-jose/v4 v4.0.4
 	github.com/golang/mock v1.6.0
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
