@@ -20,9 +20,6 @@ jobs:
     permissions:
       # required for all workflows
       security-events: write
-      # only required for workflows in private repositories
-      actions: write
-      contents: read
 
     steps:
     -
