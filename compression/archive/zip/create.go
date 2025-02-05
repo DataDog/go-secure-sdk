@@ -134,6 +134,9 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 			return nil
 		}
 
+		// Update the file info header
+		header.Name = file
+
 		// Suffix directory name with a slash
 		if fi.IsDir() && !strings.HasSuffix(header.Name, "/") {
 			header.Name += "/"
@@ -151,14 +154,15 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 			if err != nil {
 				return fmt.Errorf("unable to open source file %q: %w", file, err)
 			}
-			defer func(closer io.Closer) {
-				if err := closer.Close(); err != nil {
+			if _, err := ioutil.LimitCopy(zf, data, dopts.MaxFileSize); err != nil {
+				if err := data.Close(); err != nil {
 					slog.Error("unable to successfully close the file", "err", err, "file", file)
 				}
-			}(data)
-
-			if _, err := ioutil.LimitCopy(zf, data, dopts.MaxFileSize); err != nil {
 				return fmt.Errorf("unable to copy source file content: %w", err)
+			}
+
+			if err := data.Close(); err != nil {
+				slog.Error("unable to successfully close the file", "err", err, "file", file)
 			}
 		}
 
@@ -183,7 +187,7 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 
 	// Close the ZIP writer to ensure trailing bits to be synced
 	if err := zw.Close(); err != nil {
-		return fmt.Errorf("unable to successfully close the TAR writer: %w", err)
+		return fmt.Errorf("unable to successfully close the ZIP writer: %w", err)
 	}
 
 	// No error
