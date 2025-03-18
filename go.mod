@@ -1,7 +1,8 @@
 module github.com/DataDog/go-secure-sdk
 
-go 1.21.0
-toolchain go1.23.7
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/google/go-cmp v0.7.0

@@ -101,6 +101,117 @@ func Test_ssrfAuthorizer_IsNetworkAddressAuthorized(t *testing.T) {
 	}
 }
 
+func Test_internalOnlyAuthorizer_IsNetworkAddressAuthorized(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		network string
+		address string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name:    "nil",
+			wantErr: true,
+		},
+		{
+			name: "invalid network",
+			args: args{
+				network: "udp",
+				address: "127.0.0.1:0",
+			},
+			wantErr: true,
+		},
+		{
+			name: "blank address",
+			args: args{
+				network: "tcp4",
+				address: "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "address without port",
+			args: args{
+				network: "tcp4",
+				address: "192.168.1.14",
+			},
+			wantErr: true,
+		},
+		{
+			name: "address without ip",
+			args: args{
+				network: "tcp4",
+				address: "example.com:80",
+			},
+			wantErr: true,
+		},
+		{
+			name: "public ipv4",
+			args: args{
+				network: "tcp4",
+				address: "8.8.8.8:453",
+			},
+			wantErr: true,
+		},
+		// ---------------------------------------------------------------------
+		{
+			name: "loopback - ipv4",
+			args: args{
+				network: "tcp4",
+				address: "127.0.0.1:0",
+			},
+			wantErr: false,
+			want:    true,
+		},
+		{
+			name: "loopback alternative - ipv4",
+			args: args{
+				network: "tcp4",
+				address: "127.234.23.1:3000",
+			},
+			wantErr: false,
+			want:    true,
+		},
+		{
+			name: "local unicast - ipv4",
+			args: args{
+				network: "tcp4",
+				address: "169.254.169.254:8800",
+			},
+			wantErr: false,
+			want:    true,
+		},
+		{
+			name: "private - ipv4",
+			args: args{
+				network: "tcp4",
+				address: "192.168.1.14:80",
+			},
+			wantErr: false,
+			want:    true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			az := InternalOnlyAuthorizer
+			got, err := az.IsNetworkAddressAuthorized(tt.args.network, tt.args.address)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("internalOnlyAuthorizer.IsNetworkAddressAuthorized() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("internalOnlyAuthorizer.IsNetworkAddressAuthorized() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_ssrfAuthorizer_IsRequestAuthorized(t *testing.T) {
 	t.Parallel()
 	assert.True(t, DefaultAuthorizer.IsRequestAuthorized(nil))

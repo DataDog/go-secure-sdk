@@ -10,6 +10,12 @@ DefaultAuthorizer exposes the default authorizer instance.
 var DefaultAuthorizer = &ssrfAuthorizer{}
 ```
 
+InternalOnlyAuthorizer exposes an authorizer instance that only allows internal addresses.
+
+```golang
+var InternalOnlyAuthorizer = &internalOnlyAuthorizer{}
+```
+
 DefaultClient represents a safe HTTP client instance.
 
 ```golang
@@ -65,6 +71,24 @@ if resp != nil {
 
 ```
 Get "http://169.254.169.254/latest/meta-data/": response filter round trip failed: request filter round trip failed: dial tcp 169.254.169.254:80: tcp4/169.254.169.254:80 is not authorized by the client: "169.254.169.254" address is link local unicast
+```
+
+### func [InternalOnly](client.go#L33)
+
+`func InternalOnly(opts ...Option) *http.Client`
+
+InternalOnly returns an HTTP client that only allows connections to internal IP addresses.
+
+```golang
+c := InternalOnly()
+
+// This will work for internal addresses
+r1, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://127.0.0.1/health", nil)
+// ...
+
+// This will be rejected
+r2, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://8.8.8.8/dns-query", nil)
+// Error: "8.8.8.8" address is not internal
 ```
 
 ### func [UnSafe](client.go#L21)
@@ -178,4 +202,3 @@ WithTimeout sets the client timeout.
 ## Sub Packages
 
 * [mock](./mock): Package mock is a generated GoMock package.
-
