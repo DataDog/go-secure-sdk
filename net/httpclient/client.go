@@ -28,6 +28,11 @@ func Safe(opts ...Option) *http.Client {
 	return NewClient(DefaultAuthorizer, opts...)
 }
 
+// InternalOnly returns an HTTP client that only allows connections to internal IP addresses.
+func InternalOnly(opts ...Option) *http.Client {
+	return NewClient(InternalOnlyAuthorizer, opts...)
+}
+
 // NewClient is used to create a safe http client with the given authorizer
 // implementation.
 func NewClient(az Authorizer, opts ...Option) *http.Client {

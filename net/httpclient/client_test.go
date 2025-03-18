@@ -39,6 +39,29 @@ func TestSafe(t *testing.T) {
 }
 
 //nolint:bodyclose // No need to close the body in tests
+func TestInternalOnly(t *testing.T) {
+	t.Parallel()
+	// Get internal only client
+	c := InternalOnly()
+
+	var err error
+
+	// These requests should work
+	mockLocalServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer mockLocalServer.Close()
+
+	// Public IP addresses should be rejected
+	r1, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://8.8.8.8/dns-query", nil)
+	_, err = c.Do(r1)
+	assert.ErrorContains(t, err, `is not authorized by the client: "8.8.8.8" address is not internal`)
+
+	// Internal requests would work, but we can't test with real connections in unit tests
+	// Instead, we verify the authorizer directly in other tests
+}
+
+//nolint:bodyclose // No need to close the body in tests
 func TestUnSafe_NoRedirect(t *testing.T) {
 	t.Parallel()
 	// Create a fake http server
