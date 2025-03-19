@@ -51,6 +51,11 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 		return fmt.Errorf("unable to initialize chrooted filesystem: %w", err)
 	}
 
+	// Prevent integer overflow when converting MaxArchiveSize to int64
+	if dopts.MaxArchiveSize > ^uint64(0)>>1 {
+		return fmt.Errorf("archive size limit too large: %d", dopts.MaxArchiveSize)
+	}
+
 	// TAR format reader
 	tarReader := tar.NewReader(io.LimitReader(r, int64(dopts.MaxArchiveSize)))
 
@@ -158,7 +163,13 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 				return fmt.Errorf("unable to successfully close %q file: %w", targetPath, err)
 			}
 
+			// Prevent integer overflow when converting Mode to fs.FileMode
+			if hdr.Mode > int64(^fs.FileMode(0)) {
+				return fmt.Errorf("file mode too large: %d", hdr.Mode)
+			}
+
 			// Update file attributes
+			//nolint:gosec // hdr.Mode is checked before being converted
 			if err := out.Chmod(targetPath, fs.FileMode(hdr.Mode)); err != nil {
 				return fmt.Errorf("unable to update file attributes: %w", err)
 			}

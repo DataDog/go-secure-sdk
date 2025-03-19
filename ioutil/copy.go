@@ -35,6 +35,7 @@ func LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (uint64, error) {
 		written, err := io.CopyN(dst, src, int64(pageSize))
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				//nolint:gosec // This is a false positive, written is not a negative number.
 				writtenLength += uint64(written)
 				break
 			}
@@ -42,6 +43,7 @@ func LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (uint64, error) {
 		}
 
 		// Add to length
+		//nolint:gosec // This is a false positive, written is not a negative number
 		writtenLength += uint64(written)
 
 		// Early check max size limit and raise error if needed to prevent

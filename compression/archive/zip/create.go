@@ -85,7 +85,8 @@ func Create(fileSystem fs.FS, w io.Writer, opts ...Option) error {
 		}
 
 		// Check file size
-		if fi.Size() > int64(dopts.MaxFileSize) {
+		//nolint:gosec // This is a false positive, fi.Size() is not a negative number.
+		if fi.Size() < 0 || uint64(fi.Size()) > dopts.MaxFileSize {
 			return fmt.Errorf("unable to add entry %q: data above the threshold", file)
 		}
 

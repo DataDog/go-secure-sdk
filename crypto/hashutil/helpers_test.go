@@ -100,7 +100,7 @@ func Test_isAcceptableFileInfo(t *testing.T) {
 			name: "too large",
 			args: args{
 				fi: &fakeFileInfo{
-					size: maxHashContent + 1,
+					size: int64(maxHashContent + 1),
 				},
 			},
 			wantErr: true,

@@ -19,7 +19,10 @@ func isAcceptableFileInfo(fi fs.FileInfo) error {
 		return errors.New("unable to hash a directory")
 	case !fi.Mode().IsRegular():
 		return errors.New("the target is not a regular file")
-	case fi.Size() > maxHashContent:
+	case fi.Size() < 0:
+		return errors.New("file size must not be negative")
+	//nolint:gosec // False positive, uint64(fi.Size()) is not negative.
+	case uint64(fi.Size()) > maxHashContent:
 		return errors.New("file too large to be hashed")
 	default:
 		// ok
