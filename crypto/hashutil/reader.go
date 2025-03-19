@@ -33,7 +33,7 @@ func Hash(r io.Reader, hf crypto.Hash) ([]byte, error) {
 	}
 
 	// Copy content from the reader to the hasher
-	if _, err := ioutil.LimitCopy(h, r, uint64(maxHashContent)); err != nil {
+	if _, err := ioutil.LimitCopy(h, r, maxHashContent); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, fmt.Errorf("unable to copy content for hashing purpose: %w", err)
 		}
@@ -73,7 +73,7 @@ func Hashes(r io.Reader, hbs ...crypto.Hash) (map[crypto.Hash][]byte, error) {
 	multiWriter := io.MultiWriter(writers...)
 
 	// Copy content from the reader to the hasher
-	if _, err := ioutil.LimitCopy(multiWriter, r, uint64(maxHashContent)); err != nil {
+	if _, err := ioutil.LimitCopy(multiWriter, r, maxHashContent); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, fmt.Errorf("unable to copy content for hashing purpose: %w", err)
 		}

@@ -9,4 +9,4 @@ import (
 	_ "crypto/sha512"
 )
 
-var maxHashContent int64 = 4 * 1024 * 1024 * 1024 // 4GB
+var maxHashContent = uint64(4 * 1024 * 1024 * 1024) // 4GB

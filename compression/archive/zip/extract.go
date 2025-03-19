@@ -55,14 +55,15 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 	}
 
 	// ZIP format reader
+	//nolint:gosec // False positive, size is not negative.
 	zipReader, err := zip.NewReader(r, int64(size))
 	if err != nil {
 		return fmt.Errorf("unable to initialize ZIP reader: %w", err)
 	}
 
 	// Ensure not too many files
-	archiveFileCount := len(zipReader.File)
-	if archiveFileCount > int(dopts.MaxEntryCount) {
+	archiveFileCount := uint64(len(zipReader.File))
+	if archiveFileCount > dopts.MaxEntryCount {
 		return fmt.Errorf("the archive contains too many file entries: %w", ErrAbortedOperation)
 	}
 

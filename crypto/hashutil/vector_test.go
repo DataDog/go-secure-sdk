@@ -41,7 +41,7 @@ func TestFileHashVector(t *testing.T) {
 			t.Run("sha256", func(t *testing.T) {
 				fh, err := root.Open(fmt.Sprintf("%s.sha256", path))
 				require.NoError(t, err)
-				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, maxHashContent)))
+				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, int64(maxHashContent))))
 				require.NoError(t, err)
 
 				out, err := FileHash(root, path, crypto.SHA256)
@@ -52,7 +52,7 @@ func TestFileHashVector(t *testing.T) {
 			t.Run("sha384", func(t *testing.T) {
 				fh, err := root.Open(fmt.Sprintf("%s.sha384", path))
 				require.NoError(t, err)
-				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, maxHashContent)))
+				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, int64(maxHashContent))))
 				require.NoError(t, err)
 
 				out, err := FileHash(root, path, crypto.SHA384)
@@ -63,7 +63,7 @@ func TestFileHashVector(t *testing.T) {
 			t.Run("sha512", func(t *testing.T) {
 				fh, err := root.Open(fmt.Sprintf("%s.sha512", path))
 				require.NoError(t, err)
-				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, maxHashContent)))
+				expected, err := io.ReadAll(hex.NewDecoder(io.LimitReader(fh, int64(maxHashContent))))
 				require.NoError(t, err)
 
 				out, err := FileHash(root, path, crypto.SHA512)
