@@ -3,7 +3,7 @@ module github.com/DataDog/go-secure-sdk
 go 1.24
 
 require (
-	github.com/go-jose/go-jose/v4 v4.1.1
+	github.com/go-jose/go-jose/v4 v4.1.2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
