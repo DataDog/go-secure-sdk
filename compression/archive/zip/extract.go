@@ -99,7 +99,7 @@ func Extract(r io.ReaderAt, size uint64, outPath string, opts ...Option) error {
 			}
 
 			// Remove existing file
-			if !(fi.IsDir() && zfi.IsDir()) {
+			if !fi.IsDir() || !zfi.IsDir() {
 				if err := out.RemoveAll(targetPath); err != nil {
 					return fmt.Errorf("unable to remove existing file %q: %w", targetPath, err)
 				}

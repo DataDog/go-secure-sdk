@@ -56,20 +56,22 @@ func generateAndSignCertificate(t *testing.T) ([]byte, []byte) {
 
 	// pack as certificate
 	certPEM := new(bytes.Buffer)
-	pem.Encode(certPEM, &pem.Block{
+	err = pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
+	require.NoError(t, err)
 
 	// pack private key
 	certPrivKeyRaw, err := x509.MarshalPKCS8PrivateKey(certPrivKey)
 	require.NoError(t, err)
 
 	certPrivKeyPEM := new(bytes.Buffer)
-	pem.Encode(certPrivKeyPEM, &pem.Block{
+	err = pem.Encode(certPrivKeyPEM, &pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: certPrivKeyRaw,
 	})
+	require.NoError(t, err)
 
 	return certPEM.Bytes(), certPrivKeyPEM.Bytes()
 }
@@ -121,7 +123,7 @@ func TestPinnedDialer(t *testing.T) {
 		resp, err := client.Do(req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		})
 
 		assert.Exactly(t, http.StatusOK, resp.StatusCode)

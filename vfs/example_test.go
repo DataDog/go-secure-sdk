@@ -57,8 +57,8 @@ func ExampleChrootFS() {
 
 	// Try to open an out of chroot file will raise a ConstraintError.
 	_, err = subRoot.Open("../etc/passwd")
-	switch {
-	case err == nil:
+	switch err {
+	case nil:
 		// No error
 	default:
 		// Other error
@@ -77,8 +77,8 @@ func ExampleOS() {
 
 	// Try to open an out of chroot file will raise a ConstraintError.
 	_, err = subRoot.Open("../passwd")
-	switch {
-	case err == nil:
+	switch err {
+	case nil:
 		// No error
 	default:
 		// Other error
