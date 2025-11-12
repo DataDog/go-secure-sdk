@@ -115,7 +115,7 @@ func Extract(r io.Reader, outPath string, opts ...Option) error {
 			}
 
 			// Remove existing file
-			if !(fi.IsDir() && hdr.Typeflag == tar.TypeDir) {
+			if !fi.IsDir() || hdr.Typeflag != tar.TypeDir {
 				if err := out.RemoveAll(targetPath); err != nil {
 					return fmt.Errorf("unable to remove existing file %q: %w", targetPath, err)
 				}

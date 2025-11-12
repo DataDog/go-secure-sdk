@@ -80,7 +80,7 @@ func TestNewTempConfirmDir(t *testing.T) {
 
 	tmp, err := NewTmpConfirmedDir()
 	require.NoError(t, err)
-	defer os.RemoveAll(string(tmp))
+	defer func() { _ = os.RemoveAll(string(tmp)) }()
 
 	delinked, err := filepath.EvalSymlinks(string(tmp))
 	require.NoError(t, err)

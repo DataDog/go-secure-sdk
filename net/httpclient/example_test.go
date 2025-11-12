@@ -22,7 +22,7 @@ func ExampleSafe() {
 
 	resp, err := c.Do(r)
 	if resp != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	// Output: Get "http://169.254.169.254/latest/meta-data/": response filter round trip failed: request filter round trip failed: dial tcp 169.254.169.254:80: tcp4/169.254.169.254:80 is not authorized by the client: "169.254.169.254" address is link local unicast
@@ -58,7 +58,7 @@ func ExampleUnSafe() {
 
 	resp, err := c.Do(r)
 	if resp != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	// Output: Get "/": stopped after 2 redirects
