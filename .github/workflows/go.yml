@@ -67,7 +67,7 @@ jobs:
       - name: Lint code
         uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6.5.2
         with:
-          version: v1.64.8
+          version: v2.6.1
           working-directory: .
           only-new-issues: false
           args: --timeout=10m
@@ -101,7 +101,7 @@ jobs:
       - name: Setup gotestsum
         uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
         with:
-          gotestsum_version: "1.12.1"
+          gotestsum_version: "1.13.0"
       - name: Run tests
         run: gotestsum --format short-verbose ./...
 
@@ -134,7 +134,7 @@ jobs:
       - name: Setup gotestsum
         uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
         with:
-          gotestsum_version: "1.12.1"
+          gotestsum_version: "1.13.0"
       - name: Run tests
         run: gotestsum --format short-verbose ./...
 
@@ -167,6 +167,6 @@ jobs:
       - name: Setup gotestsum
         uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
         with:
-          gotestsum_version: "1.12.1"
+          gotestsum_version: "1.13.0"
       - name: Run tests
         run: gotestsum --format short-verbose ./...
