@@ -1,0 +1,726 @@
+# Go Secure SDK - LLM Context
+
+## Project Overview
+
+The Go Secure SDK is a security-focused Go library developed by Datadog that provides secure-by-default implementations for common operations prone to security vulnerabilities. It's production-ready code used in Datadog's infrastructure.
+
+**Module**: github.com/DataDog/go-secure-sdk
+**Go Version**: 1.24.0+
+**License**: Apache 2.0
+
+## Key Principles
+
+- **Secure by Default**: All components implement security best practices automatically
+- **Attack Prevention**: Built-in protection against zip-slip, SSRF, path traversal, and more
+- **Production Ready**: Battle-tested in Datadog's production environments
+- **Modular**: Use only the packages you need
+- **Well Tested**: Comprehensive security-focused test coverage
+
+## Installation
+
+```go
+go get github.com/DataDog/go-secure-sdk
+```
+
+## Package Index
+
+1. **compression/archive/tar** - Secure TAR archive operations
+2. **compression/archive/zip** - Secure ZIP archive operations
+3. **crypto/hashutil** - Multi-algorithm cryptographic hashing
+4. **crypto/keyutil** - Cryptographic key management (PEM, JWK, generation)
+5. **generator/randomness** - Cryptographically secure random generation
+6. **ioutil** - Hardened I/O operations with limits and timeouts
+7. **net/httpclient** - SSRF-safe HTTP client
+8. **net/tlsclient** - TLS dialer with certificate pinning
+9. **vfs** - Virtual filesystem with path traversal protection
+
+---
+
+## 1. compression/archive/tar
+
+### Purpose
+Secure TAR archive creation and extraction with comprehensive attack protection.
+
+### Security Features
+- Zip-slip attack prevention
+- Path traversal protection
+- Archive bomb protection (size/count limits)
+- Symbolic link recursion protection
+- Chrooted extraction
+
+### Key Functions
+
+**Create(fileSystem fs.FS, w io.Writer, opts ...Option) error**
+Creates a TAR archive from a filesystem.
+
+**Extract(r io.Reader, outPath string, opts ...Option) error**
+Extracts TAR content with security controls.
+
+### Important Options
+- `WithMaxArchiveSize(uint64)` - Limit total archive size
+- `WithMaxEntryCount(uint64)` - Limit file count (default: prevents DoS)
+- `WithMaxFileSize(uint64)` - Limit individual file size
+- `WithMaxSymlinkRecursion(uint64)` - Limit symlink depth
+- `WithIncludeFilter(FileInfoFilterFunc)` - Include only matching files
+- `WithExcludeFilter(FileInfoFilterFunc)` - Exclude matching files
+- `WithOverwriteFilter(FileInfoFilterFunc)` - Control overwrite behavior
+- `WithHeaderRewritterFunc(HeaderProcessorFunc)` - Modify headers (e.g., reset times)
+- `WithRestoreOwner(bool)` - Restore file ownership (default: false)
+- `WithRestoreTimes(bool)` - Restore timestamps (default: false)
+- `WithEmptyDirectories(bool)` - Include empty directories
+
+### Common Patterns
+
+```go
+// Safe extraction from untrusted source
+func extractUpload(uploadPath, destPath string) error {
+    f, err := os.Open(uploadPath)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    return tar.Extract(
+        io.LimitReader(f, 100<<20), // Max 100MB
+        destPath,
+        tar.WithMaxEntryCount(1000),
+        tar.WithMaxFileSize(10<<20), // 10MB per file
+    )
+}
+
+// Deterministic archive creation
+err := tar.Create(root, writer,
+    tar.WithExcludeFilter(func(path string, fi fs.FileInfo) bool {
+        return strings.HasPrefix(path, ".git")
+    }),
+    tar.WithHeaderRewritterFunc(tar.ResetHeaderTimes()),
+)
+```
+
+### Helper Functions
+- `ResetHeaderTimes()` - Returns HeaderProcessorFunc to reset times for deterministic output
+
+---
+
+## 2. compression/archive/zip
+
+### Purpose
+Secure ZIP archive creation and extraction with similar protections as TAR.
+
+### Key Functions
+
+**Create(fileSystem fs.FS, w io.Writer, opts ...Option) error**
+Creates a ZIP archive with security controls.
+
+**Extract(r io.Reader, outPath string, opts ...Option) error**
+Extracts ZIP content safely.
+
+### Important Options
+- `WithMaxArchiveSize(uint64)` - Limit total archive size
+- `WithMaxEntryCount(uint64)` - Limit file count
+- `WithMaxFileSize(uint64)` - Limit individual file size
+- `WithCompressionLevel(int)` - Set compression level (flate constants)
+- `WithIncludeFilter(FileInfoFilterFunc)`
+- `WithExcludeFilter(FileInfoFilterFunc)`
+- `WithPassword([]byte)` - Password-protect ZIP (creation only)
+
+### Common Patterns
+
+```go
+// Create compressed archive excluding binaries
+err := zip.Create(fileSystem, writer,
+    zip.WithCompressionLevel(flate.BestCompression),
+    zip.WithExcludeFilter(func(path string, fi fs.FileInfo) bool {
+        return strings.HasSuffix(path, ".exe") || strings.HasSuffix(path, ".zip")
+    }),
+)
+```
+
+---
+
+## 3. crypto/hashutil
+
+### Purpose
+Efficient cryptographic hashing with support for computing multiple algorithms in a single pass.
+
+### Key Functions
+
+**FileHashes(root fs.FS, path string, algos ...crypto.Hash) (map[crypto.Hash][]byte, error)**
+Computes multiple hash algorithms in one read.
+
+**FileHashMatches(root fs.FS, path string, algo crypto.Hash, expected []byte) (bool, error)**
+Verifies a file against expected hash.
+
+**FromHex(algo crypto.Hash, value string) ([]byte, error)**
+Converts hex string to hash bytes.
+
+**ToHex(algo crypto.Hash, value []byte) string**
+Converts hash bytes to hex string.
+
+### Supported Algorithms
+- crypto.SHA256
+- crypto.SHA384
+- crypto.SHA512
+- crypto.SHA3_256
+- crypto.SHA3_384
+- crypto.SHA3_512
+
+### Common Patterns
+
+```go
+// Verify file integrity with multiple algorithms
+hashes, err := hashutil.FileHashes(root, "file.bin",
+    crypto.SHA256,
+    crypto.SHA384,
+    crypto.SHA512,
+)
+if err != nil {
+    return err
+}
+
+// Check against expected
+sha256Hex := hashutil.ToHex(crypto.SHA256, hashes[crypto.SHA256])
+```
+
+---
+
+## 4. crypto/keyutil
+
+### Purpose
+Comprehensive cryptographic key management supporting multiple formats and operations.
+
+### Key Functions
+
+**GenerateKeyPair(algo KeyType) (crypto.PublicKey, crypto.PrivateKey, error)**
+Generates cryptographic key pairs.
+
+**ToJWK(key interface{}) (*jose.JSONWebKey, error)**
+Converts keys to JWK format.
+
+**FromJWK(jwk *jose.JSONWebKey) (interface{}, error)**
+Converts JWK to Go crypto types.
+
+**ToEncryptedJWK(jwk *jose.JSONWebKey, password []byte) ([]byte, error)**
+Encrypts JWK with password.
+
+**FromEncryptedJWK(data []byte, password []byte) (*jose.JSONWebKey, error)**
+Decrypts password-protected JWK.
+
+**ToPEM(key interface{}) ([]byte, error)**
+Converts keys to PEM format.
+
+**FromPEM(data []byte) (interface{}, error)**
+Parses PEM-encoded keys.
+
+**Fingerprint(key crypto.PublicKey) (string, error)**
+Computes SSH-style key fingerprint.
+
+### Key Types
+- `RSA2048`, `RSA4096` - RSA keys
+- `EC` - ECDSA P-256
+- `Ed25519` - EdDSA
+
+### Common Patterns
+
+```go
+// Generate and save encrypted key
+pub, priv, err := keyutil.GenerateKeyPair(keyutil.EC)
+if err != nil {
+    return err
+}
+
+jwk, err := keyutil.ToJWK(priv)
+if err != nil {
+    return err
+}
+
+encrypted, err := keyutil.ToEncryptedJWK(jwk, []byte("password"))
+if err != nil {
+    return err
+}
+
+// Compute fingerprint for verification
+fp, err := keyutil.Fingerprint(pub)
+```
+
+---
+
+## 5. generator/randomness
+
+### Purpose
+Cryptographically secure random generation with math/rand-compatible API backed by crypto/rand.
+
+### Key Functions
+
+**Intn(n int) int**
+Returns secure random int in [0,n).
+
+**Int63() int64**
+Returns secure random int64.
+
+**Float64() float64**
+Returns secure random float64 in [0.0,1.0).
+
+**Read(p []byte) (int, error)**
+Fills p with secure random bytes.
+
+**Alphanumeric(length int) (string, error)**
+Generates random alphanumeric string.
+
+**Numeric(length int) (string, error)**
+Generates random numeric string.
+
+**VerificationCode(length int) (string, error)**
+Generates numeric verification code.
+
+**StringFromCharset(length int, charset string) (string, error)**
+Generates random string from custom charset.
+
+### Common Patterns
+
+```go
+// Drop-in replacement for math/rand
+import "github.com/DataDog/go-secure-sdk/generator/randomness"
+
+// Secure random number
+n := randomness.Intn(100)
+
+// Generate tokens
+apiToken, err := randomness.Alphanumeric(32)
+sessionID, err := randomness.Alphanumeric(64)
+pin, err := randomness.VerificationCode(6)
+
+// Custom charset
+password, err := randomness.StringFromCharset(16,
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%")
+```
+
+### Thread Safety
+All functions are thread-safe. Package provides both global functions and `*LockedRand` type for explicit instances.
+
+---
+
+## 6. ioutil
+
+### Purpose
+Hardened I/O operations with size limits and timeouts to prevent DoS attacks.
+
+### Key Functions
+
+**LimitCopy(dst io.Writer, src io.Reader, maxSize uint64) (int64, error)**
+Copies data with maximum size limit. Returns error if limit exceeded.
+
+**TimeoutReader(r io.Reader, timeout time.Duration) io.Reader**
+Wraps reader with timeout protection.
+
+### Common Patterns
+
+```go
+// Prevent decompression bombs
+size, err := ioutil.LimitCopy(dst, gzipReader, 10<<20) // Max 10MB
+if err != nil {
+    return fmt.Errorf("file too large or copy failed: %w", err)
+}
+
+// Protect against slow reads
+timeoutReader := ioutil.TimeoutReader(networkReader, 30*time.Second)
+data, err := io.ReadAll(timeoutReader)
+```
+
+---
+
+## 7. net/httpclient
+
+### Purpose
+SSRF-safe HTTP client that blocks requests to dangerous targets (metadata services, private IPs, etc.).
+
+### Key Functions
+
+**Safe(opts ...Option) *http.Client**
+Returns HTTP client with SSRF protection enabled.
+
+**UnSafe(opts ...Option) *http.Client**
+Returns HTTP client with default transport only (no SSRF protection).
+
+**NewClient(az Authorizer, opts ...Option) *http.Client**
+Returns HTTP client with custom authorizer.
+
+### Default Protections
+The safe client blocks:
+- Link-local addresses (169.254.0.0/16, fe80::/10)
+- Loopback addresses (127.0.0.0/8, ::1)
+- Private IP ranges (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
+- IPv6 unique local addresses (fc00::/7)
+
+### Important Options
+- `WithTimeout(time.Duration)` - Set client timeout
+- `WithFollowRedirect(bool)` - Enable redirect following (default: false)
+- `WithMaxRedirectionCount(int)` - Limit redirects
+- `WithDisableKeepAlives(bool)` - Disable keep-alives
+- `WithTLSClientConfig(*tls.Config)` - Custom TLS config
+- `WithTLSDialer(func)` - Custom TLS dialer (for pinning)
+- `WithDisableRequestFilter(bool)` - Disable SSRF request filter
+- `WithDisableResponseFilter(bool)` - Disable SSRF response filter
+
+### Common Patterns
+
+```go
+// Safe client blocks dangerous requests
+client := httpclient.Safe(
+    httpclient.WithTimeout(30*time.Second),
+    httpclient.WithFollowRedirect(true),
+)
+
+// This is blocked (metadata service)
+resp, err := client.Get("http://169.254.169.254/latest/meta-data/")
+// Returns: address is link local unicast
+
+// Fetch user-provided URL safely
+func fetchURL(userURL string) ([]byte, error) {
+    client := httpclient.Safe()
+    resp, err := client.Get(userURL)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+
+    // Also limit response size
+    return io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+}
+```
+
+### Custom Authorizer
+
+Implement the `Authorizer` interface to create custom SSRF rules:
+
+```go
+type Authorizer interface {
+    AuthorizeRequest(*http.Request) error
+    AuthorizeResponse(*http.Response) error
+    AuthorizeTCPDial(network, addr string) error
+}
+```
+
+---
+
+## 8. net/tlsclient
+
+### Purpose
+TLS dialer with certificate pinning support.
+
+### Key Functions
+
+**PinnedDialer(config *tls.Config, fingerprint string) func(context.Context, string, string) (net.Conn, error)**
+Creates TLS dialer that pins to specific certificate fingerprint.
+
+### Common Patterns
+
+```go
+// Pin to specific certificate
+fingerprint := "sha256:1234567890abcdef..."
+dialer := tlsclient.PinnedDialer(tlsConfig, fingerprint)
+
+client := httpclient.Safe(
+    httpclient.WithTLSDialer(dialer),
+)
+
+// Connection fails if certificate doesn't match
+resp, err := client.Get("https://api.example.com")
+```
+
+---
+
+## 9. vfs
+
+### Purpose
+Virtual filesystem abstraction with security constraints preventing path traversal attacks.
+
+### Key Types
+
+**FileSystem interface**
+Extends fs.FS with write operations (Mkdir, Remove, OpenFile, etc.).
+
+**ConfirmedDir string**
+Type-safe directory path that's been validated as existing.
+
+**ConstraintError**
+Error type for path constraint violations.
+
+### Key Functions
+
+**Chroot(root string) (FileSystem, error)**
+Creates chrooted filesystem from OS path.
+
+**ChrootFS(root FileSystem, path string) (FileSystem, error)**
+Creates chrooted filesystem from another filesystem.
+
+**OS() FileSystem**
+Returns unrestricted OS filesystem (use with caution).
+
+**ConfirmDir(root FileSystem, path string) (ConfirmedDir, error)**
+Validates directory exists and returns confirmed path.
+
+**NewTmpConfirmedDir() (ConfirmedDir, error)**
+Creates temporary directory as ConfirmedDir.
+
+### FileSystem Methods
+- `Open(name string) (fs.File, error)` - Open for reading
+- `OpenFile(name string, flag int, perm fs.FileMode) (File, error)` - Open for writing
+- `Mkdir(name string, perm fs.FileMode) error` - Create directory
+- `MkdirAll(name string, perm fs.FileMode) error` - Create directory tree
+- `Remove(name string) error` - Remove file/directory
+- `RemoveAll(name string) error` - Remove recursively
+- `Root() string` - Get filesystem root path
+
+### ConfirmedDir Methods
+- `HasPrefix(path ConfirmedDir) bool` - Check if path is within directory
+- `Join(path string) string` - Safely join paths
+- `String() string` - Get path string
+
+### Common Patterns
+
+```go
+// Create chrooted filesystem for safe extraction
+fs, err := vfs.Chroot("/safe/base/path")
+if err != nil {
+    return err
+}
+
+// Path traversal attempts are blocked
+err = fs.Mkdir("../../../etc", 0755)
+// Returns: ConstraintError
+
+// Safe temporary directory
+tmpDir, err := vfs.NewTmpConfirmedDir()
+if err != nil {
+    return err
+}
+
+// Check if path escapes chroot
+safePath := tmpDir.Join("../../../etc/passwd")
+if !tmpDir.HasPrefix(vfs.ConfirmedDir(safePath)) {
+    return errors.New("path traversal attempt detected")
+}
+
+// Use with archive extraction
+err = tar.Extract(reader, fs.Root(),
+    tar.WithMaxArchiveSize(100<<20),
+)
+```
+
+---
+
+## Security Best Practices
+
+### General Principles
+1. **Input Validation**: Always validate user inputs before processing
+2. **Size Limits**: Use built-in limits to prevent resource exhaustion
+3. **Timeouts**: Apply reasonable timeouts to prevent hanging operations
+4. **Least Privilege**: Use chrooted filesystems and network restrictions
+5. **Defense in Depth**: Combine multiple security layers
+
+### Archive Operations
+- Always use size limits when extracting untrusted archives
+- Combine with chrooted filesystem for double protection
+- Set reasonable file count limits to prevent zip bombs
+- Use `io.LimitReader` before extraction functions
+
+### HTTP Requests
+- Always use `httpclient.Safe()` for user-provided URLs
+- Combine with response size limits using `io.LimitReader`
+- Set appropriate timeouts
+- Disable redirect following unless necessary
+
+### Filesystem Operations
+- Use `vfs.Chroot()` when working with user-provided paths
+- Validate paths with `ConfirmedDir` type
+- Check for `ConstraintError` to detect traversal attempts
+
+### Random Generation
+- Use `generator/randomness` instead of `math/rand` for security-sensitive operations
+- Use `Alphanumeric()` for tokens and session IDs
+- Use `VerificationCode()` for PIN codes
+- Use `StringFromCharset()` for passwords with custom requirements
+
+---
+
+## Complete Example: Secure Upload Handler
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "net/http"
+
+    "github.com/DataDog/go-secure-sdk/compression/archive/tar"
+    "github.com/DataDog/go-secure-sdk/generator/randomness"
+    "github.com/DataDog/go-secure-sdk/ioutil"
+    "github.com/DataDog/go-secure-sdk/vfs"
+)
+
+func handleUpload(w http.ResponseWriter, r *http.Request) error {
+    // Generate secure session ID
+    sessionID, err := randomness.Alphanumeric(32)
+    if err != nil {
+        return fmt.Errorf("failed to generate session ID: %w", err)
+    }
+
+    // Create temporary extraction directory
+    tmpDir, err := vfs.NewTmpConfirmedDir()
+    if err != nil {
+        return fmt.Errorf("failed to create temp dir: %w", err)
+    }
+
+    // Create chrooted filesystem
+    fs, err := vfs.Chroot(tmpDir.String())
+    if err != nil {
+        return fmt.Errorf("failed to create chroot: %w", err)
+    }
+
+    // Extract with all safety checks
+    err = tar.Extract(
+        io.LimitReader(r.Body, 100<<20), // Max 100MB upload
+        fs.Root(),
+        tar.WithMaxEntryCount(1000),     // Max 1000 files
+        tar.WithMaxFileSize(10<<20),     // Max 10MB per file
+    )
+    if err != nil {
+        return fmt.Errorf("extraction failed: %w", err)
+    }
+
+    fmt.Fprintf(w, "Upload successful. Session: %s\n", sessionID)
+    return nil
+}
+```
+
+---
+
+## Error Handling
+
+### Common Error Types
+
+**tar/zip**: `ErrAbortedOperation`, `ErrNothingArchived`
+
+**vfs**: `ConstraintError` - Path traversal or constraint violation
+
+**httpclient**: Authorization errors for blocked requests
+
+### Pattern
+
+```go
+// Check for constraint violations
+err := fs.Mkdir("../etc", 0755)
+var constraintErr *vfs.ConstraintError
+if errors.As(err, &constraintErr) {
+    log.Printf("Path traversal attempt: %v", constraintErr)
+}
+
+// Check for size violations
+err := tar.Extract(reader, path, tar.WithMaxArchiveSize(1<<20))
+if errors.Is(err, tar.ErrAbortedOperation) {
+    log.Printf("Archive too large or too many files")
+}
+```
+
+---
+
+## Testing
+
+The SDK includes comprehensive test coverage. When writing tests:
+
+```go
+// Use in-memory filesystems for testing
+import "testing/fstest"
+
+root := fstest.MapFS{
+    "test.txt": {Data: []byte("content")},
+}
+
+// Create temporary confirmed directories
+tmpDir, err := vfs.NewTmpConfirmedDir()
+require.NoError(t, err)
+
+// Use testdata directories
+testFS := os.DirFS("./testdata")
+```
+
+---
+
+## Dependencies
+
+Core dependencies:
+- `github.com/go-jose/go-jose/v4` - JWK/JWE support
+- `golang.org/x/crypto` - Extended cryptography
+- `golang.org/x/net` - Extended networking
+
+Testing dependencies:
+- `github.com/stretchr/testify` - Test assertions
+- `github.com/google/go-cmp` - Deep comparisons
+- `github.com/golang/mock` - Mocking
+
+---
+
+## Performance Considerations
+
+1. **hashutil**: Computing multiple hashes in one pass is more efficient than multiple reads
+2. **randomness**: Thread-safe global functions use locked instance; create `LockedRand` for isolated use
+3. **httpclient**: Authorizer checks happen per-dial; consider caching for frequent requests
+4. **vfs**: Path resolution happens on each operation; use ConfirmedDir for repeated access
+
+---
+
+## Migration Guide
+
+### From archive/tar
+```go
+// Before
+tar.NewReader(r)
+
+// After
+import "github.com/DataDog/go-secure-sdk/compression/archive/tar"
+tar.Extract(r, outPath, tar.WithMaxArchiveSize(100<<20))
+```
+
+### From math/rand
+```go
+// Before
+import "math/rand"
+n := rand.Intn(100)
+
+// After
+import "github.com/DataDog/go-secure-sdk/generator/randomness"
+n := randomness.Intn(100)
+```
+
+### From net/http
+```go
+// Before
+client := &http.Client{Timeout: 30*time.Second}
+
+// After
+import "github.com/DataDog/go-secure-sdk/net/httpclient"
+client := httpclient.Safe(httpclient.WithTimeout(30*time.Second))
+```
+
+---
+
+## Common Pitfalls
+
+1. **Forgetting size limits**: Always set appropriate limits for untrusted input
+2. **Using UnSafe() incorrectly**: Only use for trusted, internal requests
+3. **Ignoring ConstraintError**: Always check for path traversal attempts
+4. **Not using io.LimitReader**: Combine with extraction/copy functions
+5. **Reusing temp directories**: Use NewTmpConfirmedDir() for each operation
+
+---
+
+## Related Resources
+
+- [pkg.go.dev Documentation](https://pkg.go.dev/github.com/DataDog/go-secure-sdk)
+- [GitHub Repository](https://github.com/DataDog/go-secure-sdk)
+- [Security Policy](https://github.com/DataDog/go-secure-sdk/blob/main/SECURITY.md)
+
+For security vulnerabilities, email: security@datadoghq.com (DO NOT file public issues)
+
